@@ -47,6 +47,12 @@ public sealed partial class MainWindow : Window
     {
         // Close-to-tray: closing the window must not exit the process,
         // because the resident app owns the IPC listener and global hotkey.
+        // The exception is when the user picked Quit from the tray menu;
+        // App.IsShuttingDown flips first so this handler steps out of the way.
+        if (App.Current?.IsShuttingDown == true)
+        {
+            return;
+        }
         args.Cancel = true;
         sender.Hide();
     }

@@ -19,6 +19,12 @@ public partial class App : Application
     public HotkeyService Hotkey { get; private set; } = null!;
     public IpcListener? Ipc { get; private set; }
 
+    /// <summary>
+    /// True while QuitApp is tearing the process down. MainWindow's AppWindow.Closing
+    /// handler checks this and lets the close go through instead of hiding to tray.
+    /// </summary>
+    public bool IsShuttingDown { get; private set; }
+
     private MainWindow? _mainWindow;
     private TrayHost? _tray;
 
@@ -86,12 +92,15 @@ public partial class App : Application
 
     public void QuitApp()
     {
+        IsShuttingDown = true;
         try { Ipc?.Dispose(); } catch { }
         try { Hotkey?.Dispose(); } catch { }
         try { _tray?.Dispose(); } catch { }
         try { _mainWindow?.Close(); } catch { }
         try { Host?.Dispose(); } catch { }
-        Exit();
+        try { Exit(); } catch { }
+        // Guarantee process termination even if a WinUI surface refused to close.
+        Environment.Exit(0);
     }
 
     private void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
