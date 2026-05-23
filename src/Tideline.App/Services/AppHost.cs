@@ -1,4 +1,5 @@
 using System;
+using Tideline.Core.Briefing;
 using Tideline.Core.Data;
 using Tideline.Core.Time;
 
@@ -14,6 +15,7 @@ public sealed class AppHost : IDisposable
     public NoteRepository Notes { get; }
     public SpaceRepository Spaces { get; }
     public TagRepository Tags { get; }
+    public BriefingService Briefing { get; }
     public string? HotkeyError { get; set; }
 
     private bool _disposed;
@@ -25,6 +27,7 @@ public sealed class AppHost : IDisposable
         Notes = new NoteRepository(db, clock);
         Spaces = new SpaceRepository(db, clock);
         Tags = new TagRepository(db);
+        Briefing = new BriefingService(db, Notes, clock);
     }
 
     public static AppHost Boot()
