@@ -14,8 +14,6 @@
                        Style="{ThemeResource BodyTextBlockStyle}"
                        Opacity="0.7" />
         </StackPanel>
-        <ScrollViewer Grid.Row="1">
-            <ListView x:Name="ViewsList" SelectionMode="None" />
-        </ScrollViewer>
+        <ListView x:Name="ViewsList" Grid.Row="1" SelectionMode="None" />
     </Grid>
 </Page>

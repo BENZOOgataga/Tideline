@@ -36,8 +36,6 @@
                     Click="AddSpaceButton_Click" />
         </Grid>
 
-        <ScrollViewer Grid.Row="2">
-            <ListView x:Name="SpacesList" SelectionMode="None" />
-        </ScrollViewer>
+        <ListView x:Name="SpacesList" Grid.Row="2" SelectionMode="None" />
     </Grid>
 </Page>

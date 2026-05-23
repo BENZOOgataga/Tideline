@@ -36,11 +36,11 @@
                     Click="SaveViewButton_Click" />
         </Grid>
 
-        <ScrollViewer Grid.Row="2" VerticalScrollMode="Auto">
-            <ListView x:Name="NotesList"
-                      SelectionMode="None"
-                      IsItemClickEnabled="True"
-                      ItemClick="NotesList_ItemClick">
+        <ListView x:Name="NotesList"
+                  Grid.Row="2"
+                  SelectionMode="None"
+                  IsItemClickEnabled="True"
+                  ItemClick="NotesList_ItemClick">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="vm:NoteCard">
                         <Grid Padding="0,8" ColumnSpacing="12">
@@ -81,6 +81,5 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-        </ScrollViewer>
     </Grid>
 </Page>
