@@ -3,10 +3,12 @@ using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
+using Tideline.App.Interop;
 using Tideline.App.Services;
 using Tideline.Core.Models;
 using Windows.Graphics;
 using Windows.System;
+using WinRT.Interop;
 
 namespace Tideline.App.Views;
 
@@ -34,11 +36,30 @@ public sealed partial class CaptureWindow : Window
             overlapped.IsAlwaysOnTop = true;
         }
 
-        AppWindow.Resize(new SizeInt32(640, 150));
+        AppWindow.Resize(new SizeInt32(680, 132));
         CenterOnScreen();
+        ApplyWindowDecorations();
 
         Activated += OnActivated;
         AppWindow.Closing += OnAppWindowClosing;
+    }
+
+    private void ApplyWindowDecorations()
+    {
+        try
+        {
+            IntPtr hwnd = WindowNative.GetWindowHandle(this);
+            // Rounded corners on Windows 11. No-op on Windows 10.
+            int corner = Win32.DWMWCP_ROUND;
+            Win32.DwmSetWindowAttribute(hwnd, Win32.DWMWA_WINDOW_CORNER_PREFERENCE, ref corner, sizeof(int));
+            // Strip the bright system border that shows on borderless windows.
+            uint borderColor = Win32.DWMWA_COLOR_NONE;
+            Win32.DwmSetWindowAttribute(hwnd, Win32.DWMWA_BORDER_COLOR, ref borderColor, sizeof(uint));
+        }
+        catch
+        {
+            // best effort; OS may be old or DWM unavailable
+        }
     }
 
     private void OnActivated(object sender, WindowActivatedEventArgs args)
