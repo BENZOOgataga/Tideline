@@ -57,6 +57,7 @@ public sealed class TrayHost : IDisposable
         MenuFlyout menu = new()
         {
             Placement = Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.Top,
+            MenuFlyoutPresenterStyle = BuildPresenterStyle(),
         };
 
         menu.Items.Add(BuildItem(
@@ -93,6 +94,17 @@ public sealed class TrayHost : IDisposable
             onClick: _app.QuitApp));
 
         return menu;
+    }
+
+    private static Microsoft.UI.Xaml.Style BuildPresenterStyle()
+    {
+        // Wider than default so "Open Tideline" / "Check for updates" plus
+        // the Ctrl+Alt+N accelerator column do not clip in the second-window
+        // popup, which does not size to content automatically.
+        Microsoft.UI.Xaml.Style style = new(typeof(MenuFlyoutPresenter));
+        style.Setters.Add(new Microsoft.UI.Xaml.Setter(MenuFlyoutPresenter.MinWidthProperty, 280.0));
+        style.Setters.Add(new Microsoft.UI.Xaml.Setter(MenuFlyoutPresenter.MaxWidthProperty, 360.0));
+        return style;
     }
 
     private static MenuFlyoutItem BuildItem(
