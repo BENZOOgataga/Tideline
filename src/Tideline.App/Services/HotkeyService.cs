@@ -9,7 +9,8 @@ namespace Tideline.App.Services;
 /// <summary>
 /// Registers a single global hotkey and raises <see cref="HotkeyPressed"/> on the UI dispatcher
 /// when it fires. Runs its own message loop on a dedicated background thread because
-/// RegisterHotKey requires a thread-owned window.
+/// RegisterHotKey must run on the same thread that owns the receiving window
+/// (otherwise Win32 returns 1408 ERROR_WINDOW_OF_OTHER_THREAD).
 /// </summary>
 public sealed class HotkeyService : IDisposable
 {
@@ -39,9 +40,10 @@ public sealed class HotkeyService : IDisposable
     }
 
     /// <summary>
-    /// Registers Ctrl+Alt+N. Returns true on success. If the hotkey is already taken by
-    /// another app, sets <see cref="LastError"/> and returns false. Surface this in
-    /// Settings rather than failing silently (see SPEC section 17).
+    /// Starts the hotkey thread and asks it to register Ctrl+Alt+N. Returns true
+    /// on success. If the combination is already taken or registration otherwise
+    /// fails, <see cref="LastError"/> carries the reason and Settings surfaces it
+    /// (SPEC section 17).
     /// </summary>
     public bool TryRegisterDefault()
     {
@@ -51,15 +53,7 @@ public sealed class HotkeyService : IDisposable
             LastError = "Hotkey thread did not start in time.";
             return false;
         }
-        bool ok = Win32.RegisterHotKey(_hwnd, HotkeyId, Win32.MOD_CONTROL | Win32.MOD_ALT | Win32.MOD_NOREPEAT, (uint)Win32.VK_N);
-        if (!ok)
-        {
-            int err = Marshal.GetLastWin32Error();
-            LastError = $"RegisterHotKey failed, Win32 error {err}. The Ctrl+Alt+N combination may already be taken.";
-            return false;
-        }
-        IsRegistered = true;
-        return true;
+        return IsRegistered;
     }
 
     private void MessageLoop()
@@ -74,7 +68,7 @@ public sealed class HotkeyService : IDisposable
         ushort atom = Win32.RegisterClassW(ref cls);
         if (atom == 0)
         {
-            LastError = "RegisterClassW failed.";
+            LastError = $"RegisterClassW failed, Win32 error {Marshal.GetLastWin32Error()}.";
             _ready.Set();
             return;
         }
@@ -82,9 +76,23 @@ public sealed class HotkeyService : IDisposable
             Win32.HWND_MESSAGE, IntPtr.Zero, cls.hInstance, IntPtr.Zero);
         if (_hwnd == IntPtr.Zero)
         {
-            LastError = "CreateWindowExW failed.";
+            LastError = $"CreateWindowExW failed, Win32 error {Marshal.GetLastWin32Error()}.";
             _ready.Set();
             return;
+        }
+
+        // RegisterHotKey must run on the thread that owns _hwnd. Doing it from
+        // the calling (UI) thread returns Win32 1408 ERROR_WINDOW_OF_OTHER_THREAD.
+        bool ok = Win32.RegisterHotKey(_hwnd, HotkeyId,
+            Win32.MOD_CONTROL | Win32.MOD_ALT | Win32.MOD_NOREPEAT, (uint)Win32.VK_N);
+        if (!ok)
+        {
+            int err = Marshal.GetLastWin32Error();
+            LastError = $"RegisterHotKey failed, Win32 error {err}. The Ctrl+Alt+N combination may already be taken.";
+        }
+        else
+        {
+            IsRegistered = true;
         }
         _ready.Set();
 
@@ -124,6 +132,9 @@ public sealed class HotkeyService : IDisposable
             {
                 if (IsRegistered)
                 {
+                    // Best-effort: UnregisterHotKey strictly speaking also wants
+                    // the owning thread, but at shutdown DestroyWindow cleans it
+                    // up anyway, so a failure here is benign.
                     Win32.UnregisterHotKey(_hwnd, HotkeyId);
                 }
                 Win32.DestroyWindow(_hwnd);
