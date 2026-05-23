@@ -131,6 +131,51 @@ VALUES ($id, $body, $createdAt, $updatedAt, NULL, NULL, NULL, 0, NULL, $spaceId,
         cmd.ExecuteNonQuery();
     }
 
+    public void SetRemindAt(string id, long? remindAtMs)
+    {
+        using SqliteCommand cmd = _db.Connection.CreateCommand();
+        cmd.CommandText = "UPDATE notes SET remind_at = $r, updated_at = $u WHERE id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        cmd.Parameters.AddWithValue("$r", (object?)remindAtMs ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$u", _clock.NowMs());
+        cmd.ExecuteNonQuery();
+    }
+
+    public void SetDueAt(string id, long? dueAtMs)
+    {
+        using SqliteCommand cmd = _db.Connection.CreateCommand();
+        cmd.CommandText = "UPDATE notes SET due_at = $d, updated_at = $u WHERE id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        cmd.Parameters.AddWithValue("$d", (object?)dueAtMs ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$u", _clock.NowMs());
+        cmd.ExecuteNonQuery();
+    }
+
+    public void SetRecurrence(string id, string? rrule)
+    {
+        using SqliteCommand cmd = _db.Connection.CreateCommand();
+        cmd.CommandText = "UPDATE notes SET recurrence = $r, updated_at = $u WHERE id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        cmd.Parameters.AddWithValue("$r", (object?)rrule ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$u", _clock.NowMs());
+        cmd.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Snoozes a note until the given absolute time, incrementing snooze_count.
+    /// Caller decides snooze targets (plus one hour, tonight, tomorrow, next week, custom)
+    /// per SPEC section 11.1.
+    /// </summary>
+    public void Snooze(string id, long untilMs)
+    {
+        using SqliteCommand cmd = _db.Connection.CreateCommand();
+        cmd.CommandText = "UPDATE notes SET remind_at = $r, snooze_count = snooze_count + 1, updated_at = $u WHERE id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        cmd.Parameters.AddWithValue("$r", untilMs);
+        cmd.Parameters.AddWithValue("$u", _clock.NowMs());
+        cmd.ExecuteNonQuery();
+    }
+
     public IReadOnlyList<Note> Search(string query, int limit = 200)
     {
         List<Note> list = new();

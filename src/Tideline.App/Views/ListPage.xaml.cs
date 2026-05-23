@@ -61,7 +61,7 @@ public sealed partial class ListPage : Page
     private async void NotesList_ItemClick(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is not NoteCard card || _host is null) return;
-        NoteEditDialog dialog = new(card)
+        NoteEditDialog dialog = new(card, _host.Clock)
         {
             XamlRoot = this.XamlRoot,
         };
@@ -69,6 +69,17 @@ public sealed partial class ListPage : Page
         if (result == ContentDialogResult.Primary)
         {
             _host.Notes.UpdateBody(card.Id, dialog.EditedBody);
+            if (dialog.SnoozeUntilMs is long snoozeMs)
+            {
+                _host.Notes.Snooze(card.Id, snoozeMs);
+            }
+            else
+            {
+                _host.Notes.SetRemindAt(card.Id, dialog.EditedRemindAt);
+            }
+            _host.Notes.SetDueAt(card.Id, dialog.EditedDueAt);
+            _host.Notes.SetRecurrence(card.Id, dialog.EditedRecurrence);
+            _host.Notes.SetPinned(card.Id, dialog.EditedPinned);
         }
         else if (result == ContentDialogResult.Secondary)
         {
