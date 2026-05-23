@@ -128,7 +128,12 @@ public sealed class TrayHost : IDisposable
         }
         if (onClick is not null)
         {
-            item.Click += (_, _) => onClick();
+            item.Click += (_, _) =>
+            {
+                CrashLog.Write($"TrayClick[{text}]", new InvalidOperationException("clicked"));
+                try { onClick(); }
+                catch (Exception ex) { CrashLog.Write($"TrayClick[{text}].Run", ex); }
+            };
         }
         return item;
     }

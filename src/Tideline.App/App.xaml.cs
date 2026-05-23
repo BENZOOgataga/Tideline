@@ -92,14 +92,27 @@ public partial class App : Application
 
     public void QuitApp()
     {
+        CrashLog.Write("QuitApp", new InvalidOperationException("invoked"));
         IsShuttingDown = true;
-        try { Ipc?.Dispose(); } catch { }
-        try { Hotkey?.Dispose(); } catch { }
-        try { _tray?.Dispose(); } catch { }
-        try { _mainWindow?.Close(); } catch { }
-        try { Host?.Dispose(); } catch { }
-        try { Exit(); } catch { }
-        // Guarantee process termination even if a WinUI surface refused to close.
+        // Schedule the actual teardown on a low-priority queue tick so the
+        // tray menu finishes dismissing first; calling Environment.Exit from
+        // inside the click handler can leave the flyout half-disposed.
+        if (UiDispatcher is null || !UiDispatcher.TryEnqueue(
+                Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
+                ShutdownNow))
+        {
+            ShutdownNow();
+        }
+    }
+
+    private void ShutdownNow()
+    {
+        CrashLog.Write("ShutdownNow", new InvalidOperationException("running"));
+        try { Ipc?.Dispose(); } catch (Exception ex) { CrashLog.Write("ShutdownNow.Ipc", ex); }
+        try { Hotkey?.Dispose(); } catch (Exception ex) { CrashLog.Write("ShutdownNow.Hotkey", ex); }
+        try { _tray?.Dispose(); } catch (Exception ex) { CrashLog.Write("ShutdownNow.Tray", ex); }
+        try { _mainWindow?.Close(); } catch (Exception ex) { CrashLog.Write("ShutdownNow.Window", ex); }
+        try { Host?.Dispose(); } catch (Exception ex) { CrashLog.Write("ShutdownNow.Host", ex); }
         Environment.Exit(0);
     }
 
