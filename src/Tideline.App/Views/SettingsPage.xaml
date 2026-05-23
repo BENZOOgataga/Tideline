@@ -16,6 +16,21 @@
                     CornerRadius="8"
                     Padding="20">
                 <StackPanel Spacing="8">
+                    <TextBlock Text="Capture hotkey" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="Ctrl + Alt + N" Style="{ThemeResource BodyTextBlockStyle}" />
+                    <InfoBar x:Name="HotkeyWarning"
+                             IsOpen="False"
+                             Severity="Warning"
+                             Title="Hotkey not registered"
+                             IsClosable="False" />
+                </StackPanel>
+            </Border>
+            <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20">
+                <StackPanel Spacing="8">
                     <TextBlock Text="Database location" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                     <TextBlock x:Name="DbPathText"
                                Style="{ThemeResource CaptionTextBlockStyle}"

@@ -40,6 +40,7 @@ public sealed class TrayHost : IDisposable
 
         _icon.ContextFlyout = BuildMenu();
         _icon.LeftClickCommand = new RelayCommand(() => _app.ShowMainWindow());
+        _icon.DoubleClickCommand = new RelayCommand(() => _app.TriggerCapture());
         _icon.ForceCreate();
     }
 
@@ -48,7 +49,7 @@ public sealed class TrayHost : IDisposable
         MenuFlyout menu = new();
 
         MenuFlyoutItem capture = new() { Text = "Capture note" };
-        capture.Click += (_, _) => _app.ShowMainWindow();
+        capture.Click += (_, _) => _app.TriggerCapture();
         menu.Items.Add(capture);
 
         MenuFlyoutItem open = new() { Text = "Open Tideline" };

@@ -15,6 +15,8 @@ public partial class App : Application
 
     public AppHost Host { get; private set; } = null!;
     public DispatcherQueue UiDispatcher { get; private set; } = null!;
+    public CaptureService Capture { get; private set; } = null!;
+    public HotkeyService Hotkey { get; private set; } = null!;
 
     private MainWindow? _mainWindow;
     private TrayHost? _tray;
@@ -31,6 +33,16 @@ public partial class App : Application
 
         Host = AppHost.Boot();
         Host.RunStartupPurge();
+
+        Capture = new CaptureService(Host);
+        Capture.NoteSaved += _ => UiDispatcher?.TryEnqueue(() => { /* future: refresh views */ });
+
+        Hotkey = new HotkeyService(UiDispatcher);
+        Hotkey.HotkeyPressed += () => Capture.Show();
+        if (!Hotkey.TryRegisterDefault())
+        {
+            Host.HotkeyError = Hotkey.LastError;
+        }
 
         _mainWindow = new MainWindow(Host);
         _tray = new TrayHost(this);
@@ -58,17 +70,22 @@ public partial class App : Application
         _mainWindow?.AppWindow?.Hide();
     }
 
+    public void TriggerCapture()
+    {
+        UiDispatcher?.TryEnqueue(() => Capture.Show());
+    }
+
     public void QuitApp()
     {
-        _tray?.Dispose();
-        _mainWindow?.Close();
-        Host?.Dispose();
+        try { Hotkey?.Dispose(); } catch { }
+        try { _tray?.Dispose(); } catch { }
+        try { _mainWindow?.Close(); } catch { }
+        try { Host?.Dispose(); } catch { }
         Exit();
     }
 
     private void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        // Last resort: log to debug output. Avoid crashing the tray-resident app on UI errors.
         System.Diagnostics.Debug.WriteLine($"[Tideline] Unhandled: {e.Exception}");
         e.Handled = true;
     }

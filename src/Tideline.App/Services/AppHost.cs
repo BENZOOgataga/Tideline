@@ -12,6 +12,7 @@ public sealed class AppHost : IDisposable
     public IClock Clock { get; }
     public NotesDb Database { get; }
     public NoteRepository Notes { get; }
+    public string? HotkeyError { get; set; }
 
     private bool _disposed;
 

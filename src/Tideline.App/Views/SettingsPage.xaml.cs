@@ -19,6 +19,11 @@ public sealed partial class SettingsPage : Page
         if (_host is not null)
         {
             DbPathText.Text = _host.Database.DatabasePath;
+            if (!string.IsNullOrWhiteSpace(_host.HotkeyError))
+            {
+                HotkeyWarning.Message = _host.HotkeyError;
+                HotkeyWarning.IsOpen = true;
+            }
         }
         base.OnNavigatedTo(e);
     }
