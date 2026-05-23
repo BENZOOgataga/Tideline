@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Company>Tideline</Company>
+    <Product>Tideline</Product>
+    <Copyright>Copyright (c) BENZOOgataga</Copyright>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+</Project>

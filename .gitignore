@@ -44,6 +44,10 @@ notes.db
 *.sqlite
 *.sqlite3
 
+# MCP / ruvector caches
+ruvector.db
+.ruflo/
+
 # Generated docs and exports
 *.tmp
 *.bak
