@@ -13,7 +13,7 @@
 
 ## 1. Concept
 
-A desktop notes app in the spirit of Windows Sticky Notes, but time-aware. Tideline is named for the mark water leaves on a shore: notes recede when you do not need them and resurface at the right moment, like the tide returning. Every note remembers when it was written and can carry a future moment when it should come back. On launch the app shows a curated briefing of what needs attention and frames resurfaced notes as a message from your past self, for example "you wrote this on May 12, reminder to call the bank".
+A desktop notes app in the spirit of Windows Sticky Notes, but time-aware. Tideline is named for the mark water leaves on a shore: notes recede when you do not need them and resurface at the right moment, like the tide returning. Every note remembers when it was written and can carry a future moment when it should come back. On launch the app shows a curated briefing of what needs attention, with plain factual framing such as "written on May 12, reminder for today". The feeling is a quiet note from earlier-you, but the wording stays factual and never speculates, see section 1.3.
 
 The deeper idea is **progressive enrichment**. A note is not a fixed thing; it is a spectrum. A bare line is a quick thought. Add a deadline and it becomes a "do this on that day" item. Add references, files, and a checklist, and it becomes a richer working note. It is the same object the whole way up, just carrying more context, and it always stays a single entry in one prioritised list rather than becoming a card on a board. This is the spine of the app, and it sits on one rule that must never be broken: capture is instant and never asks you to decide anything, while enrichment is always optional and always added later. That rule is what keeps Tideline calm instead of turning into a heavyweight tool.
 
@@ -21,26 +21,46 @@ The app replaces the common habit of sending messages to a private chat channel 
 
 The app is calm by design: no constant polling, no notification spam, no wall of everything at once. It surfaces things at a few deliberate moments only. See section 10.
 
+### 1.1 Identity, what Tideline is and is not
+
+The shortest accurate description is **a personal operational memory**: a resurfacing note system for long-term personal work continuity. Put another way, it is the private message-to-yourself habit, done properly for the long term. The app exists because useful things get buried in a private chat after they are sent: reminders, resources, references to credentials, files, infrastructure notes, debugging follow-ups, links, and temporary operational thoughts. Tideline solves that while preserving the same emotional simplicity and low friction.
+
+Tideline IS: a personal operational memory, a lightweight temporal note system, a resurfacing note application, a low-friction capture environment, a documentation and reminders hybrid, and a private note stream to yourself.
+
+Tideline is NOT: a task manager, a project management tool, a workspace platform, a productivity operating system, an AI assistant, a smart second brain, a Notion alternative, or a Todoist clone.
+
+### 1.2 Philosophy, the feel that must be protected
+
+The app must never feel like enterprise software, database software, admin tooling, life-management software, or productivity coaching. It must feel calm, lightweight, personal, quiet, non-judgmental, low-pressure, and immediate. The user must never feel "I need to maintain the system." If they do, that is a product failure, not a missing feature. Advanced organization emerges progressively and stays hidden until wanted; the interface prioritizes note content and temporal framing over metadata, categorization, and controls. The visual feeling to aim for is a desktop surface holding resurfacing memory fragments, not productivity software.
+
+### 1.3 No faked intelligence
+
+Tideline is intentionally not AI-driven. It does not infer emotional context, analyze behavior, generate insights, interpret meaning, predict patterns, or act like an assistant. The resurfacing system is simple and deterministic, based on remind dates, due dates, lateness, and optional future aging or snooze signals. The app must never fake intelligence it does not have. This has a direct consequence for copy, see section 23: prefer plain factual framing such as "written 11 days ago" or "reminder for today", and never claim to know what the user was doing, for example "you wrote this while working on infrastructure". The earlier shorthand "a message from your past self" is a design feeling, not literal copy; the shipped wording stays factual.
+
+### 1.4 Emotional and visual references
+
+Lean toward the feel of Windows Sticky Notes, Telegram saved messages, a chat with yourself, Apple Journal, PowerToys, the restraint of Things 3, and the calm of Arc. Avoid drifting toward Notion, ClickUp, Jira, Monday, Airtable, a Linear clone, database dashboards, an Obsidian clone, AI second-brain software, or PKM maximalism. Sticky Notes is the strongest emotional reference for low pressure, instant capture, visual simplicity, and disposability; Tideline keeps those qualities while adding resurfacing, light organization, references, filtering, and operational continuity, without becoming visually heavy.
+
 ---
 
 ## 2. Goals and Non-Goals
 
 ### Goals
 - Sub-second capture of a thought from anywhere via a global hotkey or a Stream Deck button.
-- Progressive enrichment: any note can grow from a line into a full project card without changing type.
+- Progressive enrichment: any note can grow from a bare line into a richer working note without changing type or leaving the single list.
 - Resurface notes at the right time with human, contextual framing, ranked so the most important float up.
 - Separate the nudge time from the deadline. These are different concepts.
 - Organize without clutter: light two-layer structure of Spaces and Tags, never nested folders.
 - Strong filtering and saved views so nothing is lost once the pile grows large.
 - Launch at log on cleanly, without competing for boot resources.
-- Notes persist forever and stay searchable after archiving.
+- Notes persist and stay searchable; completed notes are archived, hidden but resurfaceable, and archived notes are purged after 90 days. See section 6.
 - Local-first and private: all data stays on the machine. No telemetry, no analytics, no accounts. The only outbound network call is the opt-in update check.
 - Feel like a real, native Windows program, visually close to PowerToys, never like a website in a frame.
 
 ### Non-Goals for version 1
 - No cloud sync, accounts, or multi device.
 - No collaboration or sharing.
-- No mobile app.
+- No mobile app in version 1. A future mobile companion is possible but strictly secondary. See section 24.
 - No nested folders or subfolders.
 - No rich text editor, custom fonts per note, or media embeds beyond plain text with light markdown.
 - No links between notes or graph view. That is wiki territory and belongs in a different app.
@@ -125,12 +145,13 @@ A single SQLite database at `%LOCALAPPDATA%\Tideline\notes.db`. All times are st
 |---|---|---|
 | `id` | TEXT, UUID | Primary key |
 | `body` | TEXT | Note content, plain text with light markdown |
-| `created_at` | INTEGER | Set once at creation, immutable. The past-self framing depends on it |
+| `created_at` | INTEGER | Set once at creation, immutable. The temporal framing depends on it |
 | `updated_at` | INTEGER | Touched on edit |
 | `remind_at` | INTEGER, nullable | When the note should resurface as a nudge |
 | `due_at` | INTEGER, nullable | The actual deadline, distinct from `remind_at` |
 | `recurrence` | TEXT, nullable | RRULE-style string for repeating notes |
 | `archived` | INTEGER, boolean | Hidden from active views, still searchable. Default 0 |
+| `archived_at` | INTEGER, nullable | Set when `archived` flips to 1, cleared on restore. Drives the 90-day purge |
 | `space_id` | TEXT, nullable | Foreign key to `spaces.id`. Null means unfiled, shown in the Inbox view |
 | `snooze_count` | INTEGER | Increments on each snooze. Default 0. See the open question in section 22 on whether it affects ordering |
 | `pinned` | INTEGER, boolean | Pinned notes always show. Default 0 |
@@ -182,7 +203,10 @@ References to context, not copies, with one exception. See section 13.
 Index `remind_at`, `due_at`, `space_id`, and `archived` on `notes`. Index `note_tags.tag_id` and `tags.name`. These keep the briefing query and all filtering instant at several thousand notes.
 
 ### Note on completion and derived states
-There is no `status` column and no workflow state in the core, per an explicit decision to remove kanban from the base design. Completion is handled by `archived`: marking a note done archives it, removing it from active views while keeping it searchable forever. "Scheduled" is derived from `remind_at` being in the future rather than stored. The aged "someday" briefing bucket is computed as unfiled notes with no due date older than a threshold. There is no separate `state` column.
+There is no `status` column and no workflow state in the core, per an explicit decision to remove kanban from the base design. Completion is handled by `archived`: marking a note done sets `archived = 1`, which hides it from active views, the List, Stream, and Briefing, while keeping it searchable and able to resurface if a reminder or due date on it comes around or the user restores it. "Scheduled" is derived from `remind_at` being in the future rather than stored. The aged "someday" briefing bucket is computed as unfiled notes with no due date older than a threshold. There is no separate `state` column and no separate "completed" state distinct from archived.
+
+### Automatic purge of old archived notes
+Archived notes are permanently deleted once they have been archived for 90 days or more, configurable via `ARCHIVE_PURGE_DAYS`, default 90. To make this measurable, the `notes` table carries an `archived_at` timestamp set when `archived` flips to 1 and cleared when a note is restored; the purge compares `archived_at` against now. The purge runs at app launch, not on a background timer, consistent with the no-daemon model. Because this is unattended permanent deletion of user data, it must be conservative: only ever purge notes that are both archived and past the threshold, never an unarchived note, and never a pinned note even if archived. This behavior must be stated plainly in the README and be visible in Settings so it never surprises anyone.
 
 ---
 
@@ -190,7 +214,7 @@ There is no `status` column and no workflow state in the core, per an explicit d
 
 Two light layers, chosen so that real life fits without nesting.
 
-**Spaces** answer the question "what project is this part of." A note lives in at most one Space. The capture default is no Space, which lands the note in the Inbox view, so the user never has to decide at capture time. Filing into a Space is a later, optional act. A Space can carry a color that its notes inherit, can hold a pinned north star note that describes the project, and can be archived as a whole when the project ends, which sweeps its notes into the archive while keeping them searchable forever.
+**Spaces** answer the question "what project is this part of." A note lives in at most one Space. The capture default is no Space, which lands the note in the Inbox view, so the user never has to decide at capture time. Filing into a Space is a later, optional act. A Space can carry a color that its notes inherit, can hold a pinned north star note that describes the project, and can be archived as a whole when the project ends, which sweeps its notes into the archive while keeping them searchable forever. A Space is a lightweight area of life or work, for example Work, Infrastructure, Health, Learning, Personal, or Ideas. It is deliberately not a workspace, team, tenant, or isolated system, and should never feel like one.
 
 **Tags** answer the question "what kind of thing is this." They cut across Spaces for themes such as idea, waiting, urgent, or someday. Tags are added inline by typing a hashtag in the note body, parsed the same way dates are, with autocomplete so they do not sprawl into near duplicates. A note can carry several tags but still lives in only one Space. A tag view shows every note with that tag across all Spaces.
 
@@ -263,18 +287,21 @@ The moments that define the experience:
 
 After the briefing is handled, the app lives in the system tray with its IPC listener active. It does not stay a foreground window and it does not exit on window close.
 
+### Tray behavior and menu
+The tray icon is a first-class part of the product, behaving like a lightweight Windows utility in the spirit of Discord, PowerToys, ShareX, or OneDrive. Closing the main window minimizes to tray, preserves resident behavior, and keeps quick capture available globally. The tray menu exposes: Capture note, Open Tideline, Briefing, The List, Stream, Spaces, Settings, Check for updates, and Quit. Quit is the only action that actually exits the process.
+
 ---
 
 ## 11. Views and Screens
 
 ### 11.1 Briefing, the primary launch screen
-Opens on launch, tray click, and focus. A vertical list of cards grouped by the buckets in section 8, with section headers. Each card shows the body text, a past-self framing line such as "written 11 days ago, reminder", any due or remind chips, the Space color if filed, and actions: Done which archives the note, Snooze with quick options of plus one hour, tonight, tomorrow, next week, or custom, Edit, and Reschedule. Curated, never a wall of everything. The target is a ten-second glance.
+Opens on launch, tray click, and focus. A vertical list of cards grouped by the buckets in section 8, with section headers. Each card shows the body text, a plain factual framing line such as "written 11 days ago" or "reminder for today", any due or remind chips, the Space color if filed, and actions: Done which archives the note, Snooze with quick options of plus one hour, tonight, tomorrow, next week, or custom, Edit, and Reschedule. The framing is always factual and never speculates about what the user was doing. See section 23. Curated, never a wall of everything. The target is a ten-second glance.
 
 ### 11.2 The List, the core view
-A single straight list of notes ordered by the date-driven score in section 8, read top to bottom. This is the heart of the app and the better version of the message-to-self channel: one prioritised stream rather than columns or boards. The filter bar from section 9 sits on top, and the list can be narrowed by tags, Space, or date. Marking a note done archives it and it leaves the list.
+A single straight list of notes ordered by the date-driven score in section 8, read top to bottom. This is the heart of the app and the better version of the message-to-self channel: one prioritised note stream, a ranked operational memory feed, never a spreadsheet, kanban, table, or task database. Cards stay note-like and low-density: content first, then light temporal framing, then optional context, then actions, then metadata last. Avoid dense metadata rows, heavy management actions, and visible workflow controls. The filter bar from section 9 sits on top, and the list can be narrowed by tags, Space, or date. Marking a note done archives it and it leaves the list.
 
 ### 11.3 Stream
-A chronological feed of every note, newest at the bottom, reading like a raw chat log with your past self. This mirrors the private-channel habit the app replaces. It differs from the List only in ordering: the Stream is by time, the List is by score. It is the same notes, another lens. The Stream can be filtered by Space.
+A chronological feed of every note, newest at the bottom, reading like a raw chat log with yourself. This mirrors the private-channel habit the app replaces and is intentionally less curated than the Briefing: raw chronological memory, operational history, temporal continuity. It should resemble a messaging timeline or a personal log, not a SaaS activity feed or an issue tracker. It differs from the List only in ordering: the Stream is by time, the List is by score. It is the same notes, another lens. The Stream can be filtered by Space.
 
 ### 11.4 Space view
 A single Space, showing only its notes as a prioritised List or a chronological Stream scoped to that Space, plus its own mini-briefing of just that project's resurfacing notes. The north star note is pinned at the top.
@@ -336,7 +363,7 @@ Because the channel is generic, anything local, such as a phone-shortcut bridge 
 ---
 
 ## 17. Edge Cases and Rules
-- **Immutable `created_at`.** The past-self framing depends on it; never overwrite it.
+- **Immutable `created_at`.** The temporal framing depends on it; never overwrite it.
 - **PC never reboots.** Covered by the tray-click and focus recompute in section 10.
 - **Clock changes and time zones.** Store all times as UTC milliseconds, render local.
 - **Empty briefing.** Show a calm empty state, do not flash and close.
@@ -385,11 +412,13 @@ Unsigned binaries trigger a SmartScreen "unknown publisher" warning on download 
 
 ## 20. Calendar Integration, Deferred
 
-Calendar sync is explicitly out of version 1, but the time model should be designed so it can be added later through a clean boundary.
+Calendar integration is out of version 1, but the time model should be designed so it can be added later through a clean boundary.
 
-The platform caveat, written down so it does not ambush anyone later: Apple Calendar is macOS and iOS only, and this app is Windows only, which is the decision that justifies the whole WinUI stack. A Windows app cannot talk to Apple Calendar directly. The honest paths, if calendar sync becomes a priority: sync through the CalDAV protocol or iCloud, which is possible from Windows but fiddly because Apple makes it so; use a platform-neutral calendar such as Google Calendar, which has a clean two-way API and would be far less painful; or accept that deep Apple Calendar support implies going cross-platform someday, which would reopen the stack choice.
+The intended direction is deliberately narrow and is now clarified: calendar integration is **one-way and reminder-oriented**, never bidirectional sync. Tideline desktop is always the source of truth; a calendar is only a reminder mirror. The app pushes due and remind times outward so they can raise notifications on a phone, a lock screen, or elsewhere in the user's ecosystem. The app must never treat the calendar as canonical storage, never sync full note content through it, and never let calendar edits flow back as the authority. The point is ecosystem convenience for reminders, nothing more.
 
-Recommendation: keep calendar out of version 1, build the internal time model well first, and design the due-date and reminder system behind a clean interface so a two-way sync can be added later. When that day comes, Google Calendar is the lighter target than Apple, unless the author has moved to a Mac.
+The platform caveat, written down so it does not ambush anyone later: Apple Calendar is macOS and iOS only, and this app is Windows only, which is the decision that justifies the whole WinUI stack. A Windows app cannot talk to Apple Calendar directly. Because the desired integration is only a one-way reminder push, the realistic mechanism from Windows is to write events over CalDAV or iCloud, or to publish a subscribable calendar feed that Apple Calendar or Google Calendar reads. A one-way push is meaningfully simpler than the two-way sync considered earlier, so the Apple target is more feasible here than it first appeared; Google Calendar remains an easier API if the ecosystem does not matter.
+
+Recommendation: keep calendar out of version 1, build the internal time model well first, and design the due-date and reminder system behind a clean interface that emits reminder events outward, so a one-way mirror to Apple or Google Calendar can be added later without touching the core.
 
 ---
 
@@ -421,5 +450,27 @@ These are genuinely undecided. They are listed as questions, not filled with a g
 
 ---
 
-## 23. Design Tone, Non-Functional but Important
-The reminder voice should feel like a colleague tapping your shoulder, not an alarm. Friendly, slightly personal, never naggy. Capture must be instant or people stop using it. The briefing must be curated or it becomes Sticky Notes again. Enrichment must always be optional or the app loses its calm. These principles outrank any individual feature.
+## 23. Copy and Tone, Non-Functional but Important
+
+Tone is a hard product constraint, not decoration, because the wrong voice breaks the calm, low-pressure identity in section 1. The voice is factual, restrained, calm, concise, and believable. It must avoid AI or assistant language, coaching or self-help wording, and any productivity-guru tone. The app must not roleplay emotional intelligence or claim knowledge it does not have, per section 1.3.
+
+Concretely, framing lines state plain facts about time and nothing more.
+
+Good copy:
+- "Written yesterday."
+- "Written 11 days ago."
+- "Reminder for today."
+- "Reminder for tomorrow."
+
+Copy to avoid:
+- "Your past self wanted you to remember this." Speculative and sentimental.
+- "You wrote this while working on infrastructure." Claims knowledge the app does not have.
+- Anything that coaches, congratulates, or interprets the user's behavior.
+
+The remaining principles still hold: capture must be instant or people stop using it; the briefing must stay curated or it becomes a wall of everything again; enrichment must always be optional or the app loses its calm; the user must never feel they are maintaining a system. These principles outrank any individual feature.
+
+---
+
+## 24. Future Mobile Companion, Out of Scope for Now
+
+Tideline is fundamentally desktop-native, and the product must not be redesigned around mobile-first constraints. The desktop app is the source of truth. If a mobile app is ever built, it is a companion only: lightweight, focused on quick capture and on receiving reminders and resurfacing, and explicitly not the primary environment. This is recorded as direction so the desktop design is never compromised for a hypothetical phone app.
