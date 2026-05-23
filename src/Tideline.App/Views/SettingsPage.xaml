@@ -43,6 +43,26 @@
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="20">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Auto-start" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <ToggleSwitch x:Name="AutoStartToggle"
+                                  Header="Launch Tideline on user logon"
+                                  OffContent="Off"
+                                  OnContent="On"
+                                  Toggled="AutoStartToggle_Toggled" />
+                    <TextBlock Text="Uses Task Scheduler with an 8-second delay so the app does not compete for boot resources."
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Opacity="0.6"
+                               TextWrapping="Wrap" />
+                    <InfoBar x:Name="AutoStartWarning" IsOpen="False" Severity="Warning" IsClosable="False" />
+                </StackPanel>
+            </Border>
+
+            <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20">
                 <StackPanel Spacing="6">
                     <TextBlock Text="Privacy" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                     <TextBlock TextWrapping="Wrap"
