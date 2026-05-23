@@ -29,18 +29,6 @@ as a stopgap that needs a real answer is also recorded here.
   `Program.Main`, and replace the body of `UpdateService.CheckOnceFireAndForget()`
   with an `UpdateManager` check against the GitHub Releases feed.
 
-- **Stream Deck plugin icon set.** The plugin manifest references
-  `tidelineIcon` but no PNG asset set (1x/2x/3x) is committed under
-  [`tools/streamdeck-plugin/com.tideline.capture.sdPlugin/`](tools/streamdeck-plugin/com.tideline.capture.sdPlugin/).
-  Stream Deck falls back to a default icon when the asset is missing.
-  Drop in a 144x144 PNG named `tidelineIcon.png` (plus `@2x.png`) when
-  ready.
-
-- **App icon polish.** The bundled
-  [`src/Tideline.App/Assets/Tideline.ico`](src/Tideline.App/Assets/Tideline.ico)
-  was generated procedurally as a flat accent-coloured square. Replace
-  with a proper iconography pass before any public release.
-
 - **Code signing.** Per SPEC section 19.3, v1 ships unsigned, with the
   README documenting the SmartScreen "Run anyway" path. Pick a signing
   story (free OSS via SignPath, or paid OV/EV cert) before broad

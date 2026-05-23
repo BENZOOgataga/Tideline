@@ -36,8 +36,8 @@ Double-click `Tideline.streamDeckPlugin` to install it into the Stream
 Deck app. In the action's property inspector, point "Path to
 tideline-capture.exe" at the helper you built above.
 
-## Open questions
+## Assets
 
-- An icon set (`tidelineIcon.png` at 1x, 2x, 3x) is not yet committed.
-  The Stream Deck app substitutes a default if the asset is missing.
-  See [OPEN_QUESTIONS.md](../../OPEN_QUESTIONS.md).
+`tidelineIcon.png` (144 px) and `tidelineIcon@2x.png` (288 px) are
+committed under `com.tideline.capture.sdPlugin/`, derived from the
+shared brand artwork. Stream Deck picks them up automatically.
