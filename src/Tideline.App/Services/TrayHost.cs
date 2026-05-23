@@ -128,12 +128,14 @@ public sealed class TrayHost : IDisposable
         }
         if (onClick is not null)
         {
-            item.Click += (_, _) =>
+            // ICommand binds through H.NotifyIcon's popup host;
+            // MenuFlyoutItem.Click does not propagate from the tray flyout.
+            item.Command = new RelayCommand(() =>
             {
                 CrashLog.Write($"TrayClick[{text}]", new InvalidOperationException("clicked"));
                 try { onClick(); }
                 catch (Exception ex) { CrashLog.Write($"TrayClick[{text}].Run", ex); }
-            };
+            });
         }
         return item;
     }
