@@ -1,6 +1,5 @@
 using System;
 using H.NotifyIcon;
-using H.NotifyIcon.Core;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Tideline.App.Services;
@@ -46,50 +45,76 @@ public sealed class TrayHost : IDisposable
 
     private MenuFlyout BuildMenu()
     {
-        MenuFlyout menu = new();
+        MenuFlyout menu = new()
+        {
+            // Compact + bottom-right placement reads more like a real tray menu.
+            Placement = Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.Top,
+        };
 
-        MenuFlyoutItem capture = new() { Text = "Capture note" };
-        capture.Click += (_, _) => _app.TriggerCapture();
-        menu.Items.Add(capture);
-
-        MenuFlyoutItem open = new() { Text = "Open Tideline" };
-        open.Click += (_, _) => _app.ShowMainWindow();
-        menu.Items.Add(open);
-
-        menu.Items.Add(new MenuFlyoutSeparator());
-
-        MenuFlyoutItem briefing = new() { Text = "Briefing" };
-        briefing.Click += (_, _) => _app.ShowMainWindow();
-        menu.Items.Add(briefing);
-
-        MenuFlyoutItem theList = new() { Text = "The List" };
-        theList.Click += (_, _) => _app.ShowMainWindow();
-        menu.Items.Add(theList);
-
-        MenuFlyoutItem stream = new() { Text = "Stream" };
-        stream.Click += (_, _) => _app.ShowMainWindow();
-        menu.Items.Add(stream);
-
-        MenuFlyoutItem spaces = new() { Text = "Spaces" };
-        spaces.Click += (_, _) => _app.ShowMainWindow();
-        menu.Items.Add(spaces);
-
-        MenuFlyoutItem settings = new() { Text = "Settings" };
-        settings.Click += (_, _) => _app.ShowMainWindow();
-        menu.Items.Add(settings);
+        // Quick actions
+        menu.Items.Add(BuildItem(
+            text: "Capture note",
+            glyph: "",         // Edit pencil
+            accelerator: "Ctrl+Alt+N",
+            isAccent: true,
+            onClick: _app.TriggerCapture));
+        menu.Items.Add(BuildItem(
+            text: "Open Tideline",
+            glyph: "",         // OpenInNewWindow
+            onClick: _app.ShowMainWindow));
 
         menu.Items.Add(new MenuFlyoutSeparator());
 
-        MenuFlyoutItem updates = new() { Text = "Check for updates", IsEnabled = false };
-        menu.Items.Add(updates);
+        // Navigation
+        menu.Items.Add(BuildItem("Briefing", "", _app.ShowMainWindow));   // CalendarDay
+        menu.Items.Add(BuildItem("The List", "", _app.ShowMainWindow));   // ViewAll
+        menu.Items.Add(BuildItem("Stream",   "", _app.ShowMainWindow));   // Message
+        menu.Items.Add(BuildItem("Spaces",   "", _app.ShowMainWindow));   // FolderHorizontal
+        menu.Items.Add(BuildItem("Settings", "", _app.ShowMainWindow));   // Settings
 
         menu.Items.Add(new MenuFlyoutSeparator());
 
-        MenuFlyoutItem quit = new() { Text = "Quit" };
-        quit.Click += (_, _) => _app.QuitApp();
-        menu.Items.Add(quit);
+        menu.Items.Add(BuildItem(
+            text: "Check for updates",
+            glyph: "",         // CloudDownload
+            onClick: null));
+
+        menu.Items.Add(new MenuFlyoutSeparator());
+
+        menu.Items.Add(BuildItem(
+            text: "Quit",
+            glyph: "",         // Power
+            onClick: _app.QuitApp));
 
         return menu;
+    }
+
+    private static MenuFlyoutItem BuildItem(
+        string text,
+        string glyph,
+        Action? onClick,
+        string? accelerator = null,
+        bool isAccent = false)
+    {
+        MenuFlyoutItem item = new()
+        {
+            Text = text,
+            Icon = new FontIcon { Glyph = glyph, FontSize = 14 },
+            IsEnabled = onClick is not null,
+        };
+        if (!string.IsNullOrEmpty(accelerator))
+        {
+            item.KeyboardAcceleratorTextOverride = accelerator;
+        }
+        if (isAccent)
+        {
+            item.FontWeight = Microsoft.UI.Text.FontWeights.SemiBold;
+        }
+        if (onClick is not null)
+        {
+            item.Click += (_, _) => onClick();
+        }
+        return item;
     }
 
     public void Dispose()
