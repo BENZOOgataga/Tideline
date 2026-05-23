@@ -17,3 +17,14 @@
 *.zip binary
 *.nupkg binary
 *.streamDeckPlugin binary
+
+# GitHub Linguist: agent / skill bundles are not Tideline source code.
+# They are shared community skills (pdf, pptx, docx, frontend-design, etc.)
+# that would otherwise dominate the language stats and hide the C# app.
+.agent/** linguist-vendored
+.claude/** linguist-vendored
+.gemini/** linguist-vendored
+.github/skills/** linguist-vendored
+AGENTS.md linguist-documentation
+docs/** linguist-documentation
+tools/streamdeck-plugin/** linguist-vendored
