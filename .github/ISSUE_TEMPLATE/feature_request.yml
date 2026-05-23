@@ -1,0 +1,36 @@
+name: Feature request
+description: Propose a feature or design change
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please connect the request to the product direction in `docs/plans/SPEC.md` when possible.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What user problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the behavior you want.
+    validations:
+      required: true
+  - type: textarea
+    id: fit
+    attributes:
+      label: Why this fits Tideline
+      description: Explain how this supports the app's goals or why the goals should change.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Include workarounds, competing designs, or reasons to decline the idea.

@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible problem in Tideline
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Please include enough detail to reproduce the problem.
+  - type: input
+    id: version
+    attributes:
+      label: Tideline version
+      description: The app version, or `main` if built from source.
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Use `winver` if needed.
+      placeholder: Windows 11 24H2
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Write the exact steps that trigger the issue.
+      placeholder: |
+        1. Launch Tideline
+        2. Press Ctrl+Alt+N
+        3. Type a note with "tomorrow"
+        4. Press Enter
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, screenshots, or extra context
+      description: Do not attach `notes.db` publicly.

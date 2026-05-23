@@ -1,0 +1,50 @@
+# Build outputs
+bin/
+obj/
+out/
+artifacts/
+publish/
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+.claude/settings.local.json
+
+# IDEs and editors
+.vs/
+.vscode/
+.idea/
+
+# Test and coverage artifacts
+TestResults/
+coverage/
+coverage.*
+*.coverage
+*.coveragexml
+
+# Logs
+*.log
+logs/
+
+# Package and dependency caches
+packages/
+node_modules/
+
+# Stream Deck plugin packaging
+*.streamDeckPlugin
+*.streamDeckPlugin.zip
+
+# App data and local databases
+notes.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Generated docs and exports
+*.tmp
+*.bak
+*.orig
