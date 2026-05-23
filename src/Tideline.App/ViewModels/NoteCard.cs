@@ -34,6 +34,7 @@ public sealed class NoteCard : INotifyPropertyChanged
     public string RemindText => Note.RemindAt is long ms ? RelativeTime.ReminderOrDue(ms, "Reminder", _clock) : string.Empty;
 
     public bool Pinned => Note.Pinned;
+    public Visibility PinnedVisibility => Pinned ? Visibility.Visible : Visibility.Collapsed;
 
     public bool HasChecklist
     {

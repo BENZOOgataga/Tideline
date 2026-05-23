@@ -11,9 +11,33 @@
     </Window.SystemBackdrop>
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="AppTitleBar"
+              Grid.Row="0"
+              Background="Transparent"
+              Padding="14,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Image x:Name="AppTitleIcon" Width="20" Height="20" />
+                <TextBlock x:Name="AppTitleText"
+                           Text="Tideline"
+                           VerticalAlignment="Center"
+                           Style="{ThemeResource CaptionTextBlockStyle}" />
+            </StackPanel>
+        </Grid>
+
         <NavigationView x:Name="Nav"
+                        Grid.Row="1"
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="False"
+                        IsTitleBarAutoPaddingEnabled="False"
                         PaneDisplayMode="Left"
                         OpenPaneLength="240"
                         SelectionChanged="Nav_SelectionChanged">
@@ -59,7 +83,7 @@
                 </NavigationViewItem>
             </NavigationView.MenuItems>
 
-            <Frame x:Name="ContentFrame" Padding="24" />
+            <Frame x:Name="ContentFrame" Padding="32,16,32,24" />
         </NavigationView>
     </Grid>
 </Window>

@@ -1,7 +1,10 @@
+using System;
+using System.IO;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Tideline.App.Services;
 using WinRT.Interop;
 
@@ -17,9 +20,25 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         Title = "Tideline";
 
-        AppWindow.SetIcon(System.IO.Path.Combine(System.AppContext.BaseDirectory, "Assets", "Tideline.ico"));
-        AppWindow.Resize(new Windows.Graphics.SizeInt32(1200, 800));
+        string iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Tideline.ico");
+        if (File.Exists(iconPath))
+        {
+            AppWindow.SetIcon(iconPath);
+        }
+        AppWindow.Resize(new Windows.Graphics.SizeInt32(1240, 820));
         AppWindow.Closing += OnAppWindowClosing;
+
+        // Custom title bar: extend client area, hand the drag region to
+        // AppTitleBar. Windows still draws the min/max/close caption
+        // buttons on the right; we just leave space for them.
+        ExtendsContentIntoTitleBar = true;
+        SetTitleBar(AppTitleBar);
+
+        string pngPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Tideline.png");
+        if (File.Exists(pngPath))
+        {
+            AppTitleIcon.Source = new BitmapImage(new Uri(pngPath));
+        }
 
         Navigate("briefing");
     }
@@ -48,7 +67,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            Tideline.App.Services.CrashLog.Write($"Navigate({tag})", ex);
+            CrashLog.Write($"Navigate({tag})", ex);
             throw;
         }
     }

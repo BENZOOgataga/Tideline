@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
 using Tideline.App.Services;
 using Tideline.App.ViewModels;
@@ -121,6 +122,12 @@ public sealed partial class ListPage : Page
             _host.Notes.Archive(card.Id);
         }
         Reload();
+    }
+
+    private void FocusSearch_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        SearchBox.Focus(FocusState.Programmatic);
+        args.Handled = true;
     }
 
     private void ArchiveButton_Click(object sender, RoutedEventArgs e)

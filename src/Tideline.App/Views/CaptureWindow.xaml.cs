@@ -34,7 +34,7 @@ public sealed partial class CaptureWindow : Window
             overlapped.IsAlwaysOnTop = true;
         }
 
-        AppWindow.Resize(new SizeInt32(560, 110));
+        AppWindow.Resize(new SizeInt32(640, 150));
         CenterOnScreen();
 
         Activated += OnActivated;
