@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Tideline.App.Views.ListPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock Text="The List" Style="{ThemeResource TitleTextBlockStyle}" />
+            <TextBlock Text="One prioritised note stream." Style="{ThemeResource BodyTextBlockStyle}" Opacity="0.7" />
+        </StackPanel>
+        <Border Grid.Row="1"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="24">
+            <TextBlock x:Name="StatusText"
+                       Text="No notes yet."
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Opacity="0.65" />
+        </Border>
+    </Grid>
+</Page>
