@@ -42,6 +42,19 @@ public sealed partial class MainWindow : Window
 
     private void Navigate(string tag)
     {
+        try
+        {
+            NavigateInner(tag);
+        }
+        catch (Exception ex)
+        {
+            Tideline.App.Services.CrashLog.Write($"Navigate({tag})", ex);
+            throw;
+        }
+    }
+
+    private void NavigateInner(string tag)
+    {
         switch (tag)
         {
             case "briefing":

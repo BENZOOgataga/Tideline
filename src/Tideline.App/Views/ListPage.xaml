@@ -57,15 +57,15 @@
                                                Style="{ThemeResource CaptionTextBlockStyle}"
                                                Opacity="0.6" />
                                     <TextBlock Text="{x:Bind DueText}"
-                                               Visibility="{x:Bind HasDue}"
+                                               Visibility="{x:Bind DueVisibility}"
                                                Style="{ThemeResource CaptionTextBlockStyle}"
                                                Opacity="0.6" />
                                     <TextBlock Text="{x:Bind RemindText}"
-                                               Visibility="{x:Bind HasRemind}"
+                                               Visibility="{x:Bind RemindVisibility}"
                                                Style="{ThemeResource CaptionTextBlockStyle}"
                                                Opacity="0.6" />
                                     <TextBlock Text="{x:Bind ChecklistText}"
-                                               Visibility="{x:Bind HasChecklist}"
+                                               Visibility="{x:Bind ChecklistVisibility}"
                                                Style="{ThemeResource CaptionTextBlockStyle}"
                                                Opacity="0.6" />
                                 </StackPanel>

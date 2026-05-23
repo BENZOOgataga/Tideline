@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Microsoft.UI.Xaml;
 using Tideline.Core.Models;
 using Tideline.Core.Parsing;
 using Tideline.Core.Time;
@@ -25,9 +26,11 @@ public sealed class NoteCard : INotifyPropertyChanged
     public string Framing => RelativeTime.Written(Note.CreatedAt, _clock);
 
     public bool HasDue => Note.DueAt.HasValue;
+    public Visibility DueVisibility => HasDue ? Visibility.Visible : Visibility.Collapsed;
     public string DueText => Note.DueAt is long ms ? RelativeTime.ReminderOrDue(ms, "Due", _clock) : string.Empty;
 
     public bool HasRemind => Note.RemindAt.HasValue;
+    public Visibility RemindVisibility => HasRemind ? Visibility.Visible : Visibility.Collapsed;
     public string RemindText => Note.RemindAt is long ms ? RelativeTime.ReminderOrDue(ms, "Reminder", _clock) : string.Empty;
 
     public bool Pinned => Note.Pinned;
@@ -40,6 +43,8 @@ public sealed class NoteCard : INotifyPropertyChanged
             return total > 0;
         }
     }
+
+    public Visibility ChecklistVisibility => HasChecklist ? Visibility.Visible : Visibility.Collapsed;
 
     public string ChecklistText
     {

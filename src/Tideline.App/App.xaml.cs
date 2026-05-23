@@ -26,6 +26,8 @@ public partial class App : Application
     {
         InitializeComponent();
         UnhandledException += OnUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandled;
+        System.Threading.Tasks.TaskScheduler.UnobservedTaskException += OnUnobservedTask;
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -94,7 +96,19 @@ public partial class App : Application
 
     private void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
+        CrashLog.Write("UI", e.Exception);
         System.Diagnostics.Debug.WriteLine($"[Tideline] Unhandled: {e.Exception}");
         e.Handled = true;
+    }
+
+    private void OnAppDomainUnhandled(object sender, System.UnhandledExceptionEventArgs e)
+    {
+        CrashLog.Write("AppDomain", e.ExceptionObject as Exception);
+    }
+
+    private void OnUnobservedTask(object? sender, System.Threading.Tasks.UnobservedTaskExceptionEventArgs e)
+    {
+        CrashLog.Write("Task", e.Exception);
+        e.SetObserved();
     }
 }
