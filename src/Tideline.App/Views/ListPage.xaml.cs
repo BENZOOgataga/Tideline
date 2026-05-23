@@ -125,7 +125,10 @@ public sealed partial class ListPage : Page
 
     private void ArchiveButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement fe && fe.DataContext is NoteCard card && _host is not null)
+        if (sender is not FrameworkElement fe || _host is null) return;
+        // The Button lives in the ListView ItemTemplate, so DataContext is the
+        // NoteCard for that row by default.
+        if (fe.DataContext is NoteCard card)
         {
             _host.Notes.Archive(card.Id);
             Reload();

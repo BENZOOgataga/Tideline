@@ -72,11 +72,8 @@
                             </StackPanel>
                             <Button Grid.Column="1"
                                     Click="ArchiveButton_Click"
-                                    DataContext="{x:Bind}"
-                                    Style="{ThemeResource SubtleButtonStyle}"
-                                    ToolTipService.ToolTip="Archive">
-                                <FontIcon Glyph="&#xE74D;" />
-                            </Button>
+                                    ToolTipService.ToolTip="Archive"
+                                    Content="Archive" />
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
