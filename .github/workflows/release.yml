@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build, pack, and publish
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Derive version from tag
+        id: ver
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $version = $tag.TrimStart('v')
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Version: $version"
+
+      - name: Restore
+        run: dotnet restore Tideline.sln
+
+      - name: Test core suite
+        run: dotnet test tests/Tideline.Core.Tests/Tideline.Core.Tests.csproj -c Release --no-restore --nologo
+
+      - name: Publish app (self-contained win-x64)
+        run: >
+          dotnet publish src/Tideline.App/Tideline.App.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          /p:Version=${{ steps.ver.outputs.version }}
+          -o publish/app
+
+      - name: Publish capture client
+        run: >
+          dotnet publish tools/Tideline.CaptureClient/Tideline.CaptureClient.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          /p:Version=${{ steps.ver.outputs.version }}
+          -o publish/client
+
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk
+
+      - name: Pack with Velopack
+        shell: pwsh
+        run: |
+          $env:PATH = "$env:USERPROFILE\.dotnet\tools;" + $env:PATH
+          New-Item -ItemType Directory -Force -Path releases | Out-Null
+          vpk pack `
+            --packId Tideline `
+            --packVersion ${{ steps.ver.outputs.version }} `
+            --packDir publish/app `
+            --mainExe Tideline.exe `
+            --outputDir releases
+
+      - name: Stage Stream Deck plugin
+        shell: pwsh
+        run: |
+          $pluginDir = 'tools/streamdeck-plugin/com.tideline.capture.sdPlugin'
+          $binDir = Join-Path $pluginDir 'bin'
+          New-Item -ItemType Directory -Force -Path $binDir | Out-Null
+          Copy-Item publish/client/tideline-capture.exe (Join-Path $binDir 'tideline-capture.exe') -Force
+          Compress-Archive -Path $pluginDir -DestinationPath Tideline.streamDeckPlugin.zip -Force
+          Move-Item Tideline.streamDeckPlugin.zip Tideline.streamDeckPlugin -Force
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: false
+          files: |
+            releases/*.nupkg
+            releases/*-Setup.exe
+            releases/RELEASES
+            Tideline.streamDeckPlugin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
