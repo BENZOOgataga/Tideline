@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Tideline.App.Views.BriefingPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:Tideline.App.ViewModels">
+    <Grid RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock Text="Briefing" Style="{ThemeResource TitleTextBlockStyle}" />
+            <TextBlock x:Name="SubtitleText"
+                       Text="What needs attention right now."
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Opacity="0.7" />
+        </StackPanel>
+
+        <Grid Grid.Row="1">
+            <Border x:Name="EmptyState"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="32"
+                    Visibility="Collapsed">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6">
+                    <FontIcon Glyph="&#xE789;" FontSize="36" Opacity="0.55" />
+                    <TextBlock Text="Nothing to surface."
+                               Style="{ThemeResource SubtitleTextBlockStyle}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Capture a thought with Ctrl+Alt+N."
+                               Style="{ThemeResource BodyTextBlockStyle}"
+                               Opacity="0.65"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+            </Border>
+
+            <ScrollViewer x:Name="ContentScroll" Visibility="Collapsed">
+                <ItemsControl x:Name="SectionsHost" />
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Page>

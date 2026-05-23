@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Tideline action settings</title>
+    <style>
+      body { font-family: Segoe UI, sans-serif; padding: 12px; color: #222; }
+      label { display: block; font-size: 12px; margin-top: 10px; }
+      input { width: 100%; padding: 6px; font-size: 13px; }
+      p { font-size: 12px; color: #555; }
+    </style>
+  </head>
+  <body>
+    <h3>Capture to Tideline</h3>
+    <p>This button opens the Tideline capture overlay via the local named pipe.</p>
+    <label for="captureExePath">Path to tideline-capture.exe</label>
+    <input id="captureExePath" type="text" placeholder="C:\Path\To\tideline-capture.exe" />
+    <label for="captureText">Pre-filled text (optional)</label>
+    <input id="captureText" type="text" placeholder="Leave empty to open empty overlay" />
+    <script>
+      let ws = null, uuid = null, action = null;
+      function connectElgatoStreamDeckSocket(inPort, inUUID, inRegEvent, inInfo, inActionInfo) {
+        uuid = inUUID;
+        action = JSON.parse(inActionInfo);
+        ws = new WebSocket('ws://127.0.0.1:' + inPort);
+        ws.onopen = function () {
+          ws.send(JSON.stringify({ event: inRegEvent, uuid: inUUID }));
+          const s = (action && action.payload && action.payload.settings) || {};
+          document.getElementById('captureExePath').value = s.captureExePath || '';
+          document.getElementById('captureText').value = s.captureText || '';
+        };
+      }
+      function save() {
+        if (!ws || !uuid || !action) return;
+        const settings = {
+          captureExePath: document.getElementById('captureExePath').value,
+          captureText: document.getElementById('captureText').value,
+        };
+        ws.send(JSON.stringify({
+          event: 'setSettings',
+          context: action.context,
+          payload: settings,
+        }));
+      }
+      document.getElementById('captureExePath').addEventListener('change', save);
+      document.getElementById('captureText').addEventListener('change', save);
+    </script>
+  </body>
+</html>

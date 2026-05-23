@@ -1,0 +1,83 @@
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
+using Tideline.App.Services;
+
+namespace Tideline.App.Views;
+
+public sealed partial class SettingsPage : Page
+{
+    private AppHost? _host;
+    private readonly AutoStartService _autoStart = new();
+    private bool _suppressToggle;
+    private bool _suppressTheme;
+
+    public SettingsPage()
+    {
+        InitializeComponent();
+    }
+
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        _host = e.Parameter as AppHost;
+        if (_host is not null)
+        {
+            DbPathText.Text = _host.Database.DatabasePath;
+            if (!string.IsNullOrWhiteSpace(_host.HotkeyError))
+            {
+                HotkeyWarning.Message = _host.HotkeyError;
+                HotkeyWarning.IsOpen = true;
+            }
+        }
+        _suppressToggle = true;
+        AutoStartToggle.IsOn = _autoStart.IsEnabled();
+        _suppressToggle = false;
+
+        _suppressTheme = true;
+        ThemeChoice.SelectedIndex = ThemePreference.Load() switch
+        {
+            ElementTheme.Light => 1,
+            ElementTheme.Dark => 2,
+            _ => 0,
+        };
+        _suppressTheme = false;
+        base.OnNavigatedTo(e);
+    }
+
+    private void AutoStartToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_suppressToggle) return;
+        AutoStartWarning.IsOpen = false;
+        AutoStartWarning.Message = string.Empty;
+        if (AutoStartToggle.IsOn)
+        {
+            var (ok, err) = _autoStart.Enable(_autoStart.ExePath);
+            if (!ok)
+            {
+                _suppressToggle = true;
+                AutoStartToggle.IsOn = false;
+                _suppressToggle = false;
+                AutoStartWarning.Title = "Could not enable auto-start";
+                AutoStartWarning.Message = err ?? "schtasks failed.";
+                AutoStartWarning.IsOpen = true;
+            }
+        }
+        else
+        {
+            _autoStart.Disable();
+        }
+    }
+
+    private void ThemeChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressTheme) return;
+        ElementTheme theme = ThemeChoice.SelectedIndex switch
+        {
+            1 => ElementTheme.Light,
+            2 => ElementTheme.Dark,
+            _ => ElementTheme.Default,
+        };
+        ThemePreference.Save(theme);
+        ThemePreference.Apply(theme, App.Current?.GetActiveAppWindow());
+    }
+}

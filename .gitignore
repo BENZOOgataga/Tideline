@@ -48,6 +48,9 @@ notes.db
 ruvector.db
 .ruflo/
 
+# Tooling output / smoke logs
+tools/logs/
+
 # Generated docs and exports
 *.tmp
 *.bak
