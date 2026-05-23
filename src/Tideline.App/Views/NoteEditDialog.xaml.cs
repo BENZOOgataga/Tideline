@@ -119,14 +119,9 @@ public sealed partial class NoteEditDialog : ContentDialog
         {
             AttachmentsList.Items.Add(BuildAttachmentRow(a));
         }
-        if (atts.Count == 0)
-        {
-            AttachmentsHint.Text = "No attachments yet. References stay small; pasted images are copied into app storage.";
-        }
-        else
-        {
-            AttachmentsHint.Text = "Attachments are stored as references (paths or URLs), not copies.";
-        }
+        AttachmentsHint.Text = atts.Count == 0
+            ? "No attachments yet. Add files, folders, or URLs as references."
+            : "Attachments are stored as references (paths or URLs), not copies.";
     }
 
     private FrameworkElement BuildAttachmentRow(Attachment a)

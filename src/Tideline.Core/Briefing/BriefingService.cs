@@ -42,14 +42,14 @@ public sealed class BriefingService
     private const double BaseNudge = 100_000;
     private const double BaseAgedSomeday = 1_000;
 
-    private readonly NotesDb _db;
     private readonly NoteRepository _notes;
     private readonly IClock _clock;
     private readonly int _somedayAgeDays;
 
     public BriefingService(NotesDb db, NoteRepository notes, IClock clock, int somedayAgeDays = DefaultSomedayAgeDays)
     {
-        _db = db;
+        // db parameter retained for API stability; queries go through _notes.
+        _ = db;
         _notes = notes;
         _clock = clock;
         _somedayAgeDays = somedayAgeDays > 0 ? somedayAgeDays : DefaultSomedayAgeDays;
@@ -64,14 +64,12 @@ public sealed class BriefingService
         long somedayThresholdMs = nowMs - (long)TimeSpan.FromDays(_somedayAgeDays).TotalMilliseconds;
 
         List<ScoredNote> picked = new();
-        HashSet<string> seen = new();
 
         foreach (Note note in _notes.All())
         {
             if (note.Pinned)
             {
                 picked.Add(new ScoredNote(note, BriefingBucket.Pinned, double.MaxValue));
-                seen.Add(note.Id);
                 continue;
             }
 
@@ -82,13 +80,11 @@ public sealed class BriefingService
                     double daysOverdue = (nowMs - due) / 86_400_000.0;
                     double score = BaseOverdue + (daysOverdue * OverdueDayWeight);
                     picked.Add(new ScoredNote(note, BriefingBucket.Overdue, score));
-                    seen.Add(note.Id);
                     continue;
                 }
                 if (due < startOfTomorrowMs)
                 {
                     picked.Add(new ScoredNote(note, BriefingBucket.DueToday, BaseDueToday));
-                    seen.Add(note.Id);
                     continue;
                 }
                 // Coming up but not today: classify as a nudge if the user already armed a remind.
@@ -97,7 +93,6 @@ public sealed class BriefingService
                     double daysUntil = (due - nowMs) / 86_400_000.0;
                     double score = BaseDueSoon - (daysUntil * DueSoonDayWeight);
                     picked.Add(new ScoredNote(note, BriefingBucket.Nudges, score));
-                    seen.Add(note.Id);
                 }
                 continue;
             }
@@ -105,7 +100,6 @@ public sealed class BriefingService
             if (note.RemindAt is long ra && ra <= nowMs)
             {
                 picked.Add(new ScoredNote(note, BriefingBucket.Nudges, BaseNudge));
-                seen.Add(note.Id);
                 continue;
             }
 
@@ -115,7 +109,6 @@ public sealed class BriefingService
                 double age = (nowMs - note.CreatedAt) / 86_400_000.0;
                 double score = BaseAgedSomeday - age;
                 picked.Add(new ScoredNote(note, BriefingBucket.AgedSomeday, score));
-                seen.Add(note.Id);
             }
         }
 

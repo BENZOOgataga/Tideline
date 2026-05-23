@@ -16,6 +16,8 @@ public sealed partial class StreamPage : Page
     public StreamPage()
     {
         InitializeComponent();
+        // ListView with default VirtualizingStackPanel so very long streams
+        // measure only visible items.
         StreamItems.ItemsSource = Items;
     }
 

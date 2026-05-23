@@ -61,16 +61,21 @@ public sealed class FilterTests : IDisposable
         Assert.Equal(2, hits.Count);
     }
 
+    private static long LocalMs(int y, int m, int d, int h)
+        => new DateTimeOffset(new DateTime(y, m, d, h, 0, 0, DateTimeKind.Local)).ToUnixTimeMilliseconds();
+
     [Fact]
     public void Query_due_today_includes_only_today_dated()
     {
-        FixedClock clock = new(new DateTimeOffset(2026, 5, 23, 10, 0, 0, TimeSpan.Zero).ToUnixTimeMilliseconds());
+        // Local clock and local due times so the local-day comparison in
+        // NoteRepository.Query is stable across developer time zones.
+        FixedClock clock = new(LocalMs(2026, 5, 23, 10));
         using NotesDb db = NotesDb.Open(_dbPath);
         NoteRepository notes = new(db, clock);
         var today = notes.Create("today");
         var tomorrow = notes.Create("tomorrow");
-        notes.SetDueAt(today.Id, new DateTimeOffset(2026, 5, 23, 18, 0, 0, TimeSpan.Zero).ToUnixTimeMilliseconds());
-        notes.SetDueAt(tomorrow.Id, new DateTimeOffset(2026, 5, 24, 18, 0, 0, TimeSpan.Zero).ToUnixTimeMilliseconds());
+        notes.SetDueAt(today.Id, LocalMs(2026, 5, 23, 18));
+        notes.SetDueAt(tomorrow.Id, LocalMs(2026, 5, 24, 18));
 
         var hits = notes.Query(FilterParser.Parse("due:today")).Select(n => n.Body).ToArray();
         Assert.Equal(new[] { "today" }, hits);

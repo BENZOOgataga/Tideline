@@ -54,7 +54,7 @@ internal static class Program
         string json = JsonSerializer.Serialize(payload);
         try
         {
-            using NamedPipeClientStream client = new(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+            using NamedPipeClientStream client = new(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
             client.Connect(2000);
             using StreamWriter writer = new(client, new UTF8Encoding(false), 1024, leaveOpen: true) { AutoFlush = true };
             using StreamReader reader = new(client, Encoding.UTF8, false, 1024, leaveOpen: true);

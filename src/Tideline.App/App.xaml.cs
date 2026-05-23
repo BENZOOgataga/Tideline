@@ -92,7 +92,6 @@ public partial class App : Application
 
     public void QuitApp()
     {
-        CrashLog.Write("QuitApp", new InvalidOperationException("invoked"));
         IsShuttingDown = true;
         // Schedule the actual teardown on a low-priority queue tick so the
         // tray menu finishes dismissing first; calling Environment.Exit from
@@ -107,7 +106,6 @@ public partial class App : Application
 
     private void ShutdownNow()
     {
-        CrashLog.Write("ShutdownNow", new InvalidOperationException("running"));
         try { Ipc?.Dispose(); } catch (Exception ex) { CrashLog.Write("ShutdownNow.Ipc", ex); }
         try { Hotkey?.Dispose(); } catch (Exception ex) { CrashLog.Write("ShutdownNow.Hotkey", ex); }
         try { _tray?.Dispose(); } catch (Exception ex) { CrashLog.Write("ShutdownNow.Tray", ex); }

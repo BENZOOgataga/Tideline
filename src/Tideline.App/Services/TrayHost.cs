@@ -146,9 +146,8 @@ public sealed class TrayHost : IDisposable
             // MenuFlyoutItem.Click does not propagate from the tray flyout.
             item.Command = new RelayCommand(() =>
             {
-                CrashLog.Write($"TrayClick[{text}]", new InvalidOperationException("clicked"));
                 try { onClick(); }
-                catch (Exception ex) { CrashLog.Write($"TrayClick[{text}].Run", ex); }
+                catch (Exception ex) { CrashLog.Write($"TrayClick[{text}]", ex); }
             });
         }
         return item;

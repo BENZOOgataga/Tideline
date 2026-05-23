@@ -36,6 +36,14 @@ public sealed class IpcListener : IDisposable
         _loop = Task.Run(() => AcceptLoop(_cts.Token));
     }
 
+    private static PipeOptions PipeFlags()
+    {
+        // CurrentUserOnly restricts the named pipe ACL to the launching user so
+        // other local users / sessions cannot send capture/show/count commands.
+        // SPEC section 18.4 expects per-user isolation.
+        return PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly;
+    }
+
     private async Task AcceptLoop(CancellationToken token)
     {
         while (!token.IsCancellationRequested)
@@ -48,7 +56,7 @@ public sealed class IpcListener : IDisposable
                     PipeDirection.InOut,
                     NamedPipeServerStream.MaxAllowedServerInstances,
                     PipeTransmissionMode.Byte,
-                    PipeOptions.Asynchronous,
+                    PipeFlags(),
                     inBufferSize: 4096,
                     outBufferSize: 4096);
                 await pipe.WaitForConnectionAsync(token).ConfigureAwait(false);
@@ -86,7 +94,15 @@ public sealed class IpcListener : IDisposable
             {
                 await writer.WriteLineAsync(response).ConfigureAwait(false);
                 await writer.FlushAsync().ConfigureAwait(false);
-                pipe.WaitForPipeDrain();
+                // Bounded drain: a stuck client cannot pin a thread-pool
+                // slot longer than the timeout.
+                try
+                {
+                    using CancellationTokenSource cts = new(TimeSpan.FromSeconds(2));
+                    NamedPipeServerStream local = pipe;
+                    await Task.Run(local.WaitForPipeDrain, cts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) { /* client never read; close anyway */ }
             }
         }
         catch (Exception ex)
@@ -168,7 +184,7 @@ public sealed class IpcListener : IDisposable
         // Wake any pending WaitForConnection by opening a client to ourselves.
         try
         {
-            using NamedPipeClientStream client = new(".", PipeName, PipeDirection.Out);
+            using NamedPipeClientStream client = new(".", PipeName, PipeDirection.Out, PipeOptions.CurrentUserOnly);
             client.Connect(50);
         }
         catch { }
