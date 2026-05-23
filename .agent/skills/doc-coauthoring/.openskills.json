@@ -1,0 +1,7 @@
+{
+  "source": "anthropics/skills",
+  "sourceType": "git",
+  "repoUrl": "https://github.com/anthropics/skills",
+  "subpath": "skills\\doc-coauthoring",
+  "installedAt": "2026-05-23T14:43:37.300Z"
+}
