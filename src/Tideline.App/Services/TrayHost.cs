@@ -98,12 +98,17 @@ public sealed class TrayHost : IDisposable
 
     private static Microsoft.UI.Xaml.Style BuildPresenterStyle()
     {
-        // Wider than default so "Open Tideline" / "Check for updates" plus
-        // the Ctrl+Alt+N accelerator column do not clip in the second-window
-        // popup, which does not size to content automatically.
+        // Force a hard width. The SecondWindow host does not resize to
+        // content; MinWidth alone is ignored, so we set Width too and lift
+        // the corner radius and padding to match Win11 system menus.
         Microsoft.UI.Xaml.Style style = new(typeof(MenuFlyoutPresenter));
-        style.Setters.Add(new Microsoft.UI.Xaml.Setter(MenuFlyoutPresenter.MinWidthProperty, 280.0));
+        style.Setters.Add(new Microsoft.UI.Xaml.Setter(MenuFlyoutPresenter.WidthProperty, 300.0));
+        style.Setters.Add(new Microsoft.UI.Xaml.Setter(MenuFlyoutPresenter.MinWidthProperty, 300.0));
         style.Setters.Add(new Microsoft.UI.Xaml.Setter(MenuFlyoutPresenter.MaxWidthProperty, 360.0));
+        style.Setters.Add(new Microsoft.UI.Xaml.Setter(MenuFlyoutPresenter.PaddingProperty,
+            new Microsoft.UI.Xaml.Thickness(0, 6, 0, 6)));
+        style.Setters.Add(new Microsoft.UI.Xaml.Setter(MenuFlyoutPresenter.CornerRadiusProperty,
+            new Microsoft.UI.Xaml.CornerRadius(8)));
         return style;
     }
 
