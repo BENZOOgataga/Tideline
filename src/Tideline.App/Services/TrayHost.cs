@@ -58,6 +58,9 @@ public sealed class TrayHost : IDisposable
         {
             Placement = Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.Top,
             MenuFlyoutPresenterStyle = BuildPresenterStyle(),
+            AreOpenCloseAnimationsEnabled = false,
+            ShouldConstrainToRootBounds = false,
+            LightDismissOverlayMode = Microsoft.UI.Xaml.Controls.LightDismissOverlayMode.Off,
         };
 
         menu.Items.Add(BuildItem(
