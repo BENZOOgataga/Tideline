@@ -46,6 +46,7 @@ public partial class App : Application
         }
 
         _mainWindow = new MainWindow(Host);
+        ThemePreference.Apply(ThemePreference.Load(), _mainWindow);
         _tray = new TrayHost(this);
 
         Ipc = new IpcListener(this, UiDispatcher);

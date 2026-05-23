@@ -16,6 +16,25 @@
                     CornerRadius="8"
                     Padding="20">
                 <StackPanel Spacing="8">
+                    <TextBlock Text="Theme" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <RadioButtons x:Name="ThemeChoice" SelectionChanged="ThemeChoice_SelectionChanged">
+                        <x:String>System</x:String>
+                        <x:String>Light</x:String>
+                        <x:String>Dark</x:String>
+                    </RadioButtons>
+                    <TextBlock Text="System follows Windows light or dark mode."
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Opacity="0.55"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20">
+                <StackPanel Spacing="8">
                     <TextBlock Text="Capture hotkey" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                     <TextBlock Text="Ctrl + Alt + N" Style="{ThemeResource BodyTextBlockStyle}" />
                     <InfoBar x:Name="HotkeyWarning"

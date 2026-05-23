@@ -10,6 +10,7 @@ public sealed partial class SettingsPage : Page
     private AppHost? _host;
     private readonly AutoStartService _autoStart = new();
     private bool _suppressToggle;
+    private bool _suppressTheme;
 
     public SettingsPage()
     {
@@ -31,6 +32,15 @@ public sealed partial class SettingsPage : Page
         _suppressToggle = true;
         AutoStartToggle.IsOn = _autoStart.IsEnabled();
         _suppressToggle = false;
+
+        _suppressTheme = true;
+        ThemeChoice.SelectedIndex = ThemePreference.Load() switch
+        {
+            ElementTheme.Light => 1,
+            ElementTheme.Dark => 2,
+            _ => 0,
+        };
+        _suppressTheme = false;
         base.OnNavigatedTo(e);
     }
 
@@ -56,5 +66,18 @@ public sealed partial class SettingsPage : Page
         {
             _autoStart.Disable();
         }
+    }
+
+    private void ThemeChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressTheme) return;
+        ElementTheme theme = ThemeChoice.SelectedIndex switch
+        {
+            1 => ElementTheme.Light,
+            2 => ElementTheme.Dark,
+            _ => ElementTheme.Default,
+        };
+        ThemePreference.Save(theme);
+        ThemePreference.Apply(theme, App.Current?.GetActiveAppWindow());
     }
 }
