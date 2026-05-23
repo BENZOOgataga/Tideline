@@ -12,6 +12,8 @@ public sealed class AppHost : IDisposable
     public IClock Clock { get; }
     public NotesDb Database { get; }
     public NoteRepository Notes { get; }
+    public SpaceRepository Spaces { get; }
+    public TagRepository Tags { get; }
     public string? HotkeyError { get; set; }
 
     private bool _disposed;
@@ -21,6 +23,8 @@ public sealed class AppHost : IDisposable
         Clock = clock;
         Database = db;
         Notes = new NoteRepository(db, clock);
+        Spaces = new SpaceRepository(db, clock);
+        Tags = new TagRepository(db);
     }
 
     public static AppHost Boot()

@@ -11,7 +11,10 @@ namespace Tideline.App.Views;
 
 public sealed partial class ListPage : Page
 {
+    public record NavArg(AppHost? Host, string? SpaceId, bool IncludeUnfiledOnly);
+
     private AppHost? _host;
+    private NavArg? _arg;
 
     public ObservableCollection<NoteCard> Items { get; } = new();
 
@@ -23,7 +26,16 @@ public sealed partial class ListPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        _host = e.Parameter as AppHost;
+        if (e.Parameter is NavArg arg)
+        {
+            _arg = arg;
+            _host = arg.Host;
+        }
+        else
+        {
+            _host = e.Parameter as AppHost;
+            _arg = new NavArg(_host, null, IncludeUnfiledOnly: false);
+        }
         Reload();
         base.OnNavigatedTo(e);
     }
@@ -32,9 +44,23 @@ public sealed partial class ListPage : Page
     {
         Items.Clear();
         if (_host is null) return;
-        IReadOnlyList<Note> notes = string.IsNullOrWhiteSpace(query)
-            ? _host.Notes.All()
-            : _host.Notes.Search(query);
+        IReadOnlyList<Note> notes;
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            notes = _host.Notes.Search(query);
+        }
+        else if (_arg?.IncludeUnfiledOnly == true)
+        {
+            notes = _host.Notes.InSpace(null);
+        }
+        else if (_arg?.SpaceId is string sid)
+        {
+            notes = _host.Notes.InSpace(sid);
+        }
+        else
+        {
+            notes = _host.Notes.All();
+        }
         foreach (Note note in notes)
         {
             Items.Add(new NoteCard(note, _host.Clock));
@@ -61,7 +87,7 @@ public sealed partial class ListPage : Page
     private async void NotesList_ItemClick(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is not NoteCard card || _host is null) return;
-        NoteEditDialog dialog = new(card, _host.Clock)
+        NoteEditDialog dialog = new(card, _host.Clock, _host)
         {
             XamlRoot = this.XamlRoot,
         };
@@ -80,6 +106,8 @@ public sealed partial class ListPage : Page
             _host.Notes.SetDueAt(card.Id, dialog.EditedDueAt);
             _host.Notes.SetRecurrence(card.Id, dialog.EditedRecurrence);
             _host.Notes.SetPinned(card.Id, dialog.EditedPinned);
+            _host.Notes.SetSpace(card.Id, dialog.EditedSpaceId);
+            _host.Tags.ReplaceForNote(card.Id, dialog.EditedTagNames);
         }
         else if (result == ContentDialogResult.Secondary)
         {

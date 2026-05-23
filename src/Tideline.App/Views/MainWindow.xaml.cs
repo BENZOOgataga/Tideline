@@ -48,13 +48,16 @@ public sealed partial class MainWindow : Window
                 ContentFrame.Navigate(typeof(BriefingPage), _host);
                 break;
             case "list":
-                ContentFrame.Navigate(typeof(ListPage), _host);
+                ContentFrame.Navigate(typeof(ListPage), new ListPage.NavArg(_host, null, IncludeUnfiledOnly: false));
                 break;
             case "stream":
                 ContentFrame.Navigate(typeof(StreamPage), _host);
                 break;
             case "inbox":
-                ContentFrame.Navigate(typeof(ListPage), _host);
+                ContentFrame.Navigate(typeof(ListPage), new ListPage.NavArg(_host, null, IncludeUnfiledOnly: true));
+                break;
+            case "spaces":
+                ContentFrame.Navigate(typeof(SpacesPage), _host);
                 break;
             case "settings":
                 ContentFrame.Navigate(typeof(SettingsPage), _host);

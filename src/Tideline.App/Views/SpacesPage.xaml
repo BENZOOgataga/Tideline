@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Tideline.App.Views.SpacesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock Text="Spaces" Style="{ThemeResource TitleTextBlockStyle}" />
+            <TextBlock Text="Areas of life or projects. A note belongs to at most one."
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Opacity="0.7" />
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="NewSpaceName"
+                     Grid.Column="0"
+                     PlaceholderText="New space name" />
+            <TextBox x:Name="NewSpaceColor"
+                     Grid.Column="1"
+                     PlaceholderText="Color (optional, e.g. #0078D4)"
+                     Width="220" />
+            <Button x:Name="AddSpaceButton"
+                    Grid.Column="2"
+                    Content="Add"
+                    Click="AddSpaceButton_Click" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="2">
+            <ListView x:Name="SpacesList" SelectionMode="None" />
+        </ScrollViewer>
+    </Grid>
+</Page>

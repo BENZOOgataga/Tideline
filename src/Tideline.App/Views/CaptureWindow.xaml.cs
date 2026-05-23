@@ -81,6 +81,13 @@ public sealed partial class CaptureWindow : Window
             return;
         }
         Note note = _host.Notes.Create(body);
+        // Inline #hashtags are parsed and attached on save so capture
+        // stays a single keystroke per SPEC section 7.
+        var tagNames = Tideline.Core.Parsing.HashtagParser.Extract(body);
+        if (tagNames.Count > 0)
+        {
+            _host.Tags.ReplaceForNote(note.Id, tagNames);
+        }
         _saved = true;
         NoteSaved?.Invoke(note);
         Close();

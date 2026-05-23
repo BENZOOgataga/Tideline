@@ -74,6 +74,17 @@
                 </StackPanel>
             </Expander>
 
+            <StackPanel Spacing="6">
+                <TextBlock Text="Space" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <ComboBox x:Name="SpaceCombo" HorizontalAlignment="Stretch" PlaceholderText="Inbox" />
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+                <TextBlock Text="Tags" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <TextBox x:Name="TagsBox"
+                         PlaceholderText="space-separated, e.g. work urgent idea" />
+            </StackPanel>
+
             <ToggleSwitch x:Name="PinnedToggle" Header="Pinned" OffContent="Off" OnContent="On" />
         </StackPanel>
     </ScrollViewer>

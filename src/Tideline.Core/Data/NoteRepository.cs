@@ -176,6 +176,39 @@ VALUES ($id, $body, $createdAt, $updatedAt, NULL, NULL, NULL, 0, NULL, $spaceId,
         cmd.ExecuteNonQuery();
     }
 
+    public void SetSpace(string id, string? spaceId)
+    {
+        using SqliteCommand cmd = _db.Connection.CreateCommand();
+        cmd.CommandText = "UPDATE notes SET space_id = $s, updated_at = $u WHERE id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        cmd.Parameters.AddWithValue("$s", (object?)spaceId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$u", _clock.NowMs());
+        cmd.ExecuteNonQuery();
+    }
+
+    public IReadOnlyList<Note> InSpace(string? spaceId, bool includeArchived = false)
+    {
+        List<Note> list = new();
+        using SqliteCommand cmd = _db.Connection.CreateCommand();
+        string spaceClause = spaceId is null ? "space_id IS NULL" : "space_id = $s";
+        string archivedClause = includeArchived ? string.Empty : " AND archived = 0";
+        cmd.CommandText = $@"
+SELECT id, body, created_at, updated_at, remind_at, due_at, recurrence, archived, archived_at, space_id, snooze_count, pinned
+FROM notes
+WHERE {spaceClause}{archivedClause}
+ORDER BY created_at DESC";
+        if (spaceId is not null)
+        {
+            cmd.Parameters.AddWithValue("$s", spaceId);
+        }
+        using SqliteDataReader reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(Map(reader));
+        }
+        return list;
+    }
+
     public IReadOnlyList<Note> Search(string query, int limit = 200)
     {
         List<Note> list = new();

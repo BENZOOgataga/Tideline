@@ -1,7 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Tideline.App.Services;
 using Tideline.App.ViewModels;
+using Tideline.Core.Data;
 using Tideline.Core.Models;
 using Tideline.Core.Time;
 
@@ -18,10 +22,23 @@ public sealed partial class NoteEditDialog : ContentDialog
     public string? EditedRecurrence => string.IsNullOrWhiteSpace(RecurrenceBox.Text) ? null : RecurrenceBox.Text.Trim();
     public bool EditedPinned => PinnedToggle.IsOn;
     public long? SnoozeUntilMs { get; private set; }
+    public string? EditedSpaceId => (SpaceCombo.SelectedItem as SpaceOption)?.Id;
+    public IReadOnlyList<string> EditedTagNames =>
+        (TagsBox.Text ?? string.Empty)
+            .Split(new[] { ' ', ',', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(TagRepository.Normalize)
+            .Where(t => t.Length > 0)
+            .Distinct()
+            .ToList();
 
     private readonly IClock _clock;
 
     public NoteEditDialog(NoteCard card, IClock clock)
+        : this(card, clock, hostForLookups: null)
+    {
+    }
+
+    public NoteEditDialog(NoteCard card, IClock clock, AppHost? hostForLookups)
     {
         Card = card;
         _clock = clock;
@@ -60,7 +77,27 @@ public sealed partial class NoteEditDialog : ContentDialog
         RecurrenceBox.Text = Note.Recurrence ?? string.Empty;
         PinnedToggle.IsOn = Note.Pinned;
 
+        PopulateSpacesAndTags(hostForLookups);
         Closing += OnClosing;
+    }
+
+    private void PopulateSpacesAndTags(AppHost? host)
+    {
+        SpaceOption inbox = new(null, "Inbox");
+        SpaceCombo.Items.Add(inbox);
+        SpaceOption? selected = inbox;
+        if (host is not null)
+        {
+            foreach (Space space in host.Spaces.All())
+            {
+                SpaceOption opt = new(space.Id, space.Name);
+                SpaceCombo.Items.Add(opt);
+                if (space.Id == Note.SpaceId) selected = opt;
+            }
+            var tagNames = host.Tags.ForNote(Note.Id).Select(t => "#" + t.Name);
+            TagsBox.Text = string.Join(' ', tagNames);
+        }
+        SpaceCombo.SelectedItem = selected;
     }
 
     private void OnClosing(ContentDialog sender, ContentDialogClosingEventArgs args)
@@ -105,5 +142,10 @@ public sealed partial class NoteEditDialog : ContentDialog
         ToggleRemindControls(true);
         RemindDate.Date = target;
         RemindTime.Time = target.TimeOfDay;
+    }
+
+    public sealed record SpaceOption(string? Id, string Name)
+    {
+        public override string ToString() => Name;
     }
 }

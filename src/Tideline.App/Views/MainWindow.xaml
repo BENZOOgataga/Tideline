@@ -40,6 +40,11 @@
                         <FontIcon Glyph="&#xE715;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem Content="Manage spaces" Tag="spaces">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8FD;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItemSeparator />
                 <NavigationViewItem Content="Settings" Tag="settings">
                     <NavigationViewItem.Icon>
