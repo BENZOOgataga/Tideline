@@ -11,6 +11,20 @@ namespace Tideline.App.Services;
 /// </summary>
 public sealed class TrayHost : IDisposable
 {
+    // Segoe Fluent Icons code points. Materialised via char.ConvertFromUtf32 so
+    // the source file stays plain ASCII and survives any text pipeline that
+    // strips Private Use Area glyphs.
+    // https://learn.microsoft.com/windows/apps/design/style/segoe-fluent-icons-font
+    private static readonly string GlyphEdit            = char.ConvertFromUtf32(0xE104);
+    private static readonly string GlyphOpenInNewWindow = char.ConvertFromUtf32(0xE8A7);
+    private static readonly string GlyphCalendarDay     = char.ConvertFromUtf32(0xE787);
+    private static readonly string GlyphViewAll         = char.ConvertFromUtf32(0xE8FD);
+    private static readonly string GlyphMessage         = char.ConvertFromUtf32(0xE8BD);
+    private static readonly string GlyphFolder          = char.ConvertFromUtf32(0xE8B7);
+    private static readonly string GlyphSetting         = char.ConvertFromUtf32(0xE713);
+    private static readonly string GlyphCloudDownload   = char.ConvertFromUtf32(0xEBD3);
+    private static readonly string GlyphPower           = char.ConvertFromUtf32(0xE7E8);
+
     private readonly App _app;
     private readonly TaskbarIcon _icon;
     private bool _disposed;
@@ -47,43 +61,40 @@ public sealed class TrayHost : IDisposable
     {
         MenuFlyout menu = new()
         {
-            // Compact + bottom-right placement reads more like a real tray menu.
             Placement = Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.Top,
         };
 
-        // Quick actions
         menu.Items.Add(BuildItem(
             text: "Capture note",
-            glyph: "",         // Edit pencil
+            glyph: GlyphEdit,
             accelerator: "Ctrl+Alt+N",
             isAccent: true,
             onClick: _app.TriggerCapture));
         menu.Items.Add(BuildItem(
             text: "Open Tideline",
-            glyph: "",         // OpenInNewWindow
+            glyph: GlyphOpenInNewWindow,
             onClick: _app.ShowMainWindow));
 
         menu.Items.Add(new MenuFlyoutSeparator());
 
-        // Navigation
-        menu.Items.Add(BuildItem("Briefing", "", _app.ShowMainWindow));   // CalendarDay
-        menu.Items.Add(BuildItem("The List", "", _app.ShowMainWindow));   // ViewAll
-        menu.Items.Add(BuildItem("Stream",   "", _app.ShowMainWindow));   // Message
-        menu.Items.Add(BuildItem("Spaces",   "", _app.ShowMainWindow));   // FolderHorizontal
-        menu.Items.Add(BuildItem("Settings", "", _app.ShowMainWindow));   // Settings
+        menu.Items.Add(BuildItem("Briefing", GlyphCalendarDay, _app.ShowMainWindow));
+        menu.Items.Add(BuildItem("The List", GlyphViewAll,     _app.ShowMainWindow));
+        menu.Items.Add(BuildItem("Stream",   GlyphMessage,     _app.ShowMainWindow));
+        menu.Items.Add(BuildItem("Spaces",   GlyphFolder,      _app.ShowMainWindow));
+        menu.Items.Add(BuildItem("Settings", GlyphSetting,     _app.ShowMainWindow));
 
         menu.Items.Add(new MenuFlyoutSeparator());
 
         menu.Items.Add(BuildItem(
             text: "Check for updates",
-            glyph: "",         // CloudDownload
+            glyph: GlyphCloudDownload,
             onClick: null));
 
         menu.Items.Add(new MenuFlyoutSeparator());
 
         menu.Items.Add(BuildItem(
             text: "Quit",
-            glyph: "",         // Power
+            glyph: GlyphPower,
             onClick: _app.QuitApp));
 
         return menu;
@@ -99,7 +110,12 @@ public sealed class TrayHost : IDisposable
         MenuFlyoutItem item = new()
         {
             Text = text,
-            Icon = new FontIcon { Glyph = glyph, FontSize = 14 },
+            Icon = new FontIcon
+            {
+                Glyph = glyph,
+                FontSize = 14,
+                FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe Fluent Icons,Segoe MDL2 Assets"),
+            },
             IsEnabled = onClick is not null,
         };
         if (!string.IsNullOrEmpty(accelerator))
