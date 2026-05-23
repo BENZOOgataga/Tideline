@@ -17,6 +17,7 @@ public partial class App : Application
     public DispatcherQueue UiDispatcher { get; private set; } = null!;
     public CaptureService Capture { get; private set; } = null!;
     public HotkeyService Hotkey { get; private set; } = null!;
+    public IpcListener? Ipc { get; private set; }
 
     private MainWindow? _mainWindow;
     private TrayHost? _tray;
@@ -46,6 +47,9 @@ public partial class App : Application
 
         _mainWindow = new MainWindow(Host);
         _tray = new TrayHost(this);
+
+        Ipc = new IpcListener(this, UiDispatcher);
+        Ipc.Start();
 
         ShowMainWindow();
     }
@@ -79,6 +83,7 @@ public partial class App : Application
 
     public void QuitApp()
     {
+        try { Ipc?.Dispose(); } catch { }
         try { Hotkey?.Dispose(); } catch { }
         try { _tray?.Dispose(); } catch { }
         try { _mainWindow?.Close(); } catch { }

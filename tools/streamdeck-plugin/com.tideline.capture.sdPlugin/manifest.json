@@ -1,0 +1,39 @@
+{
+  "Name": "Tideline",
+  "Version": "1.0.0",
+  "Author": "Tideline",
+  "URL": "https://github.com/BENZOOgataga/Tideline",
+  "Icon": "tidelineIcon",
+  "Description": "Trigger a Tideline capture overlay from a Stream Deck button.",
+  "Category": "Tideline",
+  "CategoryIcon": "tidelineIcon",
+  "CodePath": "plugin/index.html",
+  "PropertyInspectorPath": "plugin/inspector.html",
+  "DefaultWindowSize": [500, 250],
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "6.0"
+  },
+  "SDKVersion": 2,
+  "Actions": [
+    {
+      "Name": "Capture to Tideline",
+      "UUID": "com.tideline.capture.action",
+      "Icon": "tidelineIcon",
+      "Tooltip": "Open the Tideline capture overlay.",
+      "PropertyInspectorPath": "plugin/inspector.html",
+      "States": [
+        {
+          "Image": "tidelineIcon",
+          "TitleAlignment": "middle",
+          "FontSize": "12"
+        }
+      ]
+    }
+  ]
+}
