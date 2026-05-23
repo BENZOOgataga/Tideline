@@ -65,6 +65,25 @@ VALUES ($id, $body, $createdAt, $updatedAt, NULL, NULL, NULL, 0, NULL, $spaceId,
         return list;
     }
 
+    /// <summary>
+    /// Chronological stream, oldest at the top, newest at the bottom. Mirrors
+    /// the private chat-with-yourself feel described in SPEC section 11.3.
+    /// </summary>
+    public IReadOnlyList<Note> Stream(bool includeArchived = false)
+    {
+        List<Note> list = new();
+        using SqliteCommand cmd = _db.Connection.CreateCommand();
+        cmd.CommandText = includeArchived
+            ? "SELECT id, body, created_at, updated_at, remind_at, due_at, recurrence, archived, archived_at, space_id, snooze_count, pinned FROM notes ORDER BY created_at ASC"
+            : "SELECT id, body, created_at, updated_at, remind_at, due_at, recurrence, archived, archived_at, space_id, snooze_count, pinned FROM notes WHERE archived = 0 ORDER BY created_at ASC";
+        using SqliteDataReader reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(Map(reader));
+        }
+        return list;
+    }
+
     public int Count(bool includeArchived = false)
     {
         using SqliteCommand cmd = _db.Connection.CreateCommand();
