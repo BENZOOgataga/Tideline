@@ -8,6 +8,9 @@ using Tideline.App.ViewModels;
 using Tideline.Core.Data;
 using Tideline.Core.Models;
 using Tideline.Core.Time;
+using Windows.Storage;
+using Windows.Storage.Pickers;
+using WinRT.Interop;
 
 namespace Tideline.App.Views;
 
@@ -32,6 +35,7 @@ public sealed partial class NoteEditDialog : ContentDialog
             .ToList();
 
     private readonly IClock _clock;
+    private readonly AppHost? _host;
 
     public NoteEditDialog(NoteCard card, IClock clock)
         : this(card, clock, hostForLookups: null)
@@ -42,6 +46,7 @@ public sealed partial class NoteEditDialog : ContentDialog
     {
         Card = card;
         _clock = clock;
+        _host = hostForLookups;
         InitializeComponent();
         BodyBox.Text = card.Body;
         FramingText.Text = card.Framing;
@@ -77,7 +82,8 @@ public sealed partial class NoteEditDialog : ContentDialog
         RecurrenceBox.Text = Note.Recurrence ?? string.Empty;
         PinnedToggle.IsOn = Note.Pinned;
 
-        PopulateSpacesAndTags(hostForLookups);
+        PopulateSpacesAndTags(_host);
+        RefreshAttachments();
         Closing += OnClosing;
     }
 
@@ -98,6 +104,107 @@ public sealed partial class NoteEditDialog : ContentDialog
             TagsBox.Text = string.Join(' ', tagNames);
         }
         SpaceCombo.SelectedItem = selected;
+    }
+
+    private void RefreshAttachments()
+    {
+        AttachmentsList.Items.Clear();
+        if (_host is null)
+        {
+            AttachmentsHint.Text = "Attachments require the running app context.";
+            return;
+        }
+        var atts = _host.Attachments.ForNote(Note.Id);
+        foreach (Attachment a in atts)
+        {
+            AttachmentsList.Items.Add(BuildAttachmentRow(a));
+        }
+        if (atts.Count == 0)
+        {
+            AttachmentsHint.Text = "No attachments yet. References stay small; pasted images are copied into app storage.";
+        }
+        else
+        {
+            AttachmentsHint.Text = "Attachments are stored as references (paths or URLs), not copies.";
+        }
+    }
+
+    private FrameworkElement BuildAttachmentRow(Attachment a)
+    {
+        Grid row = new() { ColumnSpacing = 8, Padding = new Thickness(0, 4, 0, 4) };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        TextBlock kind = new() { Text = a.Kind, Opacity = 0.6 };
+        Grid.SetColumn(kind, 0);
+        row.Children.Add(kind);
+
+        TextBlock path = new() { Text = a.DisplayName ?? a.PathOrUrl, TextTrimming = Microsoft.UI.Xaml.TextTrimming.CharacterEllipsis };
+        ToolTipService.SetToolTip(path, a.PathOrUrl);
+        Grid.SetColumn(path, 1);
+        row.Children.Add(path);
+
+        Button remove = new() { Content = "Remove" };
+        remove.Click += (_, _) =>
+        {
+            _host!.Attachments.Remove(a.Id);
+            RefreshAttachments();
+        };
+        Grid.SetColumn(remove, 2);
+        row.Children.Add(remove);
+        return row;
+    }
+
+    private async void AddFile_Click(object sender, RoutedEventArgs e)
+    {
+        if (_host is null) return;
+        FileOpenPicker picker = new();
+        picker.FileTypeFilter.Add("*");
+        InitializePicker(picker);
+        StorageFile? file = await picker.PickSingleFileAsync();
+        if (file is null) return;
+        _host.Attachments.Add(Note.Id, AttachmentKinds.FileRef, file.Path, file.Name);
+        RefreshAttachments();
+    }
+
+    private async void AddFolder_Click(object sender, RoutedEventArgs e)
+    {
+        if (_host is null) return;
+        FolderPicker picker = new();
+        picker.FileTypeFilter.Add("*");
+        InitializePicker(picker);
+        StorageFolder? folder = await picker.PickSingleFolderAsync();
+        if (folder is null) return;
+        _host.Attachments.Add(Note.Id, AttachmentKinds.FolderRef, folder.Path, folder.Name);
+        RefreshAttachments();
+    }
+
+    private async void AddUrl_Click(object sender, RoutedEventArgs e)
+    {
+        if (_host is null) return;
+        TextBox box = new() { PlaceholderText = "https://...", MinWidth = 360 };
+        ContentDialog dlg = new()
+        {
+            Title = "Add URL",
+            Content = box,
+            PrimaryButtonText = "Add",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = this.XamlRoot,
+        };
+        ContentDialogResult result = await dlg.ShowAsync();
+        if (result == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(box.Text))
+        {
+            _host.Attachments.Add(Note.Id, AttachmentKinds.Url, box.Text.Trim());
+            RefreshAttachments();
+        }
+    }
+
+    private void InitializePicker(object picker)
+    {
+        IntPtr hwnd = WindowNative.GetWindowHandle(App.Current?.GetActiveAppWindow() ?? throw new InvalidOperationException("No active window"));
+        InitializeWithWindow.Initialize(picker, hwnd);
     }
 
     private void OnClosing(ContentDialog sender, ContentDialogClosingEventArgs args)

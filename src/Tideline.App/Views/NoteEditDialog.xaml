@@ -79,6 +79,21 @@
                 <ComboBox x:Name="SpaceCombo" HorizontalAlignment="Stretch" PlaceholderText="Inbox" />
             </StackPanel>
 
+            <Expander Header="Attachments">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Add file" Click="AddFile_Click" />
+                        <Button Content="Add folder" Click="AddFolder_Click" />
+                        <Button Content="Add URL" Click="AddUrl_Click" />
+                    </StackPanel>
+                    <ItemsControl x:Name="AttachmentsList" />
+                    <TextBlock x:Name="AttachmentsHint"
+                               Text="Attachments are stored as references (paths or URLs), not copies."
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Opacity="0.55" />
+                </StackPanel>
+            </Expander>
+
             <StackPanel Spacing="6">
                 <TextBlock Text="Tags" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                 <TextBox x:Name="TagsBox"

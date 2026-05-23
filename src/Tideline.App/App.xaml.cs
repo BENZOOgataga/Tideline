@@ -70,6 +70,8 @@ public partial class App : Application
         _mainWindow?.AppWindow?.Hide();
     }
 
+    public Window? GetActiveAppWindow() => _mainWindow;
+
     public void TriggerCapture()
     {
         UiDispatcher?.TryEnqueue(() => Capture.Show());

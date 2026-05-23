@@ -15,6 +15,7 @@ public sealed class AppHost : IDisposable
     public NoteRepository Notes { get; }
     public SpaceRepository Spaces { get; }
     public TagRepository Tags { get; }
+    public AttachmentRepository Attachments { get; }
     public BriefingService Briefing { get; }
     public string? HotkeyError { get; set; }
 
@@ -27,6 +28,7 @@ public sealed class AppHost : IDisposable
         Notes = new NoteRepository(db, clock);
         Spaces = new SpaceRepository(db, clock);
         Tags = new TagRepository(db);
+        Attachments = new AttachmentRepository(db, clock);
         Briefing = new BriefingService(db, Notes, clock);
     }
 

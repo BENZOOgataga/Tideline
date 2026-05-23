@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Tideline.Core.Models;
+using Tideline.Core.Parsing;
 using Tideline.Core.Time;
 
 namespace Tideline.App.ViewModels;
@@ -31,6 +32,24 @@ public sealed class NoteCard : INotifyPropertyChanged
 
     public bool Pinned => Note.Pinned;
 
+    public bool HasChecklist
+    {
+        get
+        {
+            var (_, total) = ChecklistParser.Progress(Note.Body);
+            return total > 0;
+        }
+    }
+
+    public string ChecklistText
+    {
+        get
+        {
+            var (done, total) = ChecklistParser.Progress(Note.Body);
+            return total == 0 ? string.Empty : $"{done} / {total} done";
+        }
+    }
+
     public void Refresh()
     {
         Raise(nameof(Body));
@@ -40,6 +59,8 @@ public sealed class NoteCard : INotifyPropertyChanged
         Raise(nameof(HasRemind));
         Raise(nameof(RemindText));
         Raise(nameof(Pinned));
+        Raise(nameof(HasChecklist));
+        Raise(nameof(ChecklistText));
     }
 
     private void Raise([CallerMemberName] string? name = null)

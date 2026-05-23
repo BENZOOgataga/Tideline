@@ -54,6 +54,10 @@
                                                Visibility="{x:Bind HasRemind}"
                                                Style="{ThemeResource CaptionTextBlockStyle}"
                                                Opacity="0.6" />
+                                    <TextBlock Text="{x:Bind ChecklistText}"
+                                               Visibility="{x:Bind HasChecklist}"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Opacity="0.6" />
                                 </StackPanel>
                             </StackPanel>
                             <Button Grid.Column="1"
