@@ -5,13 +5,14 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Tideline.App.Services;
 using Tideline.App.ViewModels;
+using Tideline.Core.Filtering;
 using Tideline.Core.Models;
 
 namespace Tideline.App.Views;
 
 public sealed partial class ListPage : Page
 {
-    public record NavArg(AppHost? Host, string? SpaceId, bool IncludeUnfiledOnly);
+    public record NavArg(AppHost? Host, string? SpaceId, bool IncludeUnfiledOnly, string? PresetQuery = null);
 
     private AppHost? _host;
     private NavArg? _arg;
@@ -30,11 +31,15 @@ public sealed partial class ListPage : Page
         {
             _arg = arg;
             _host = arg.Host;
+            if (!string.IsNullOrEmpty(arg.PresetQuery))
+            {
+                SearchBox.Text = arg.PresetQuery;
+            }
         }
         else
         {
             _host = e.Parameter as AppHost;
-            _arg = new NavArg(_host, null, IncludeUnfiledOnly: false);
+            _arg = new NavArg(_host, null, false);
         }
         Reload();
         base.OnNavigatedTo(e);
@@ -44,10 +49,12 @@ public sealed partial class ListPage : Page
     {
         Items.Clear();
         if (_host is null) return;
+        string q = query ?? SearchBox.Text ?? string.Empty;
         IReadOnlyList<Note> notes;
-        if (!string.IsNullOrWhiteSpace(query))
+        if (!string.IsNullOrWhiteSpace(q))
         {
-            notes = _host.Notes.Search(query);
+            FilterQuery parsed = FilterParser.Parse(q);
+            notes = _host.Notes.Query(parsed);
         }
         else if (_arg?.IncludeUnfiledOnly == true)
         {
@@ -67,7 +74,7 @@ public sealed partial class ListPage : Page
         }
         int count = Items.Count;
         SubtitleText.Text = count == 0
-            ? "No notes yet. Capture one with Ctrl+Alt+N."
+            ? "No notes match. Try a different query or capture a thought with Ctrl+Alt+N."
             : $"{count} note{(count == 1 ? string.Empty : "s")}.";
     }
 
@@ -113,7 +120,7 @@ public sealed partial class ListPage : Page
         {
             _host.Notes.Archive(card.Id);
         }
-        Reload(SearchBox.Text);
+        Reload();
     }
 
     private void ArchiveButton_Click(object sender, RoutedEventArgs e)
@@ -121,7 +128,29 @@ public sealed partial class ListPage : Page
         if (sender is FrameworkElement fe && fe.DataContext is NoteCard card && _host is not null)
         {
             _host.Notes.Archive(card.Id);
-            Reload(SearchBox.Text);
+            Reload();
+        }
+    }
+
+    private async void SaveViewButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_host is null) return;
+        string query = SearchBox.Text?.Trim() ?? string.Empty;
+        if (query.Length == 0) return;
+        TextBox nameBox = new() { PlaceholderText = "View name", MinWidth = 300 };
+        ContentDialog dlg = new()
+        {
+            Title = "Save view",
+            Content = nameBox,
+            PrimaryButtonText = "Save",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = this.XamlRoot,
+        };
+        var result = await dlg.ShowAsync();
+        if (result == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(nameBox.Text))
+        {
+            _host.SavedFilters.Create(nameBox.Text.Trim(), query);
         }
     }
 }

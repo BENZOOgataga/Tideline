@@ -19,12 +19,22 @@
                        Opacity="0.7" />
         </StackPanel>
 
-        <AutoSuggestBox x:Name="SearchBox"
-                        Grid.Row="1"
-                        PlaceholderText="Search notes"
-                        QueryIcon="Find"
-                        TextChanged="SearchBox_TextChanged"
-                        QuerySubmitted="SearchBox_QuerySubmitted" />
+        <Grid Grid.Row="1" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <AutoSuggestBox x:Name="SearchBox"
+                            Grid.Column="0"
+                            PlaceholderText="Filter: #work due:thisweek any:#idea,#someday space:learning"
+                            QueryIcon="Find"
+                            TextChanged="SearchBox_TextChanged"
+                            QuerySubmitted="SearchBox_QuerySubmitted" />
+            <Button x:Name="SaveViewButton"
+                    Grid.Column="1"
+                    Content="Save view"
+                    Click="SaveViewButton_Click" />
+        </Grid>
 
         <ScrollViewer Grid.Row="2" VerticalScrollMode="Auto">
             <ListView x:Name="NotesList"

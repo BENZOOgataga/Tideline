@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Microsoft.Data.Sqlite;
+using Tideline.Core.Filtering;
 using Tideline.Core.Models;
 using Tideline.Core.Time;
 
@@ -200,6 +202,118 @@ ORDER BY created_at DESC";
         if (spaceId is not null)
         {
             cmd.Parameters.AddWithValue("$s", spaceId);
+        }
+        using SqliteDataReader reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add(Map(reader));
+        }
+        return list;
+    }
+
+    /// <summary>
+/// Runs the inline filter language (SPEC section 9) against the notes table.
+/// Supports tag filtering (all or any), space by name, due ranges, archived
+/// flag, and free text via FTS5 MATCH.
+/// </summary>
+    public IReadOnlyList<Note> Query(FilterQuery filter, int limit = 500)
+    {
+        if (filter.IsEmpty) return All();
+
+        StringBuilder sql = new();
+        sql.Append(@"SELECT n.id, n.body, n.created_at, n.updated_at, n.remind_at, n.due_at, n.recurrence,
+                            n.archived, n.archived_at, n.space_id, n.snooze_count, n.pinned
+                     FROM notes n");
+
+        List<string> where = new();
+        Dictionary<string, object> parameters = new();
+
+        if (!filter.IncludeArchived) where.Add("n.archived = 0");
+
+        if (filter.Tags.Count > 0)
+        {
+            if (filter.TagMode == TagMatchMode.All)
+            {
+                for (int i = 0; i < filter.Tags.Count; i++)
+                {
+                    string pName = $"$tag{i}";
+                    where.Add($@"EXISTS (
+                        SELECT 1 FROM note_tags nt
+                        JOIN tags t ON t.id = nt.tag_id
+                        WHERE nt.note_id = n.id AND t.name = {pName})");
+                    parameters[pName] = filter.Tags[i];
+                }
+            }
+            else
+            {
+                List<string> placeholders = new();
+                for (int i = 0; i < filter.Tags.Count; i++)
+                {
+                    string pName = $"$tag{i}";
+                    placeholders.Add(pName);
+                    parameters[pName] = filter.Tags[i];
+                }
+                where.Add($@"EXISTS (
+                    SELECT 1 FROM note_tags nt
+                    JOIN tags t ON t.id = nt.tag_id
+                    WHERE nt.note_id = n.id AND t.name IN ({string.Join(",", placeholders)}))");
+            }
+        }
+
+        if (!string.IsNullOrEmpty(filter.SpaceName))
+        {
+            where.Add("EXISTS (SELECT 1 FROM spaces s WHERE s.id = n.space_id AND s.name = $space COLLATE NOCASE)");
+            parameters["$space"] = filter.SpaceName;
+        }
+
+        long nowMs = _clock.NowMs();
+        DateTimeOffset localNow = _clock.Now().ToLocalTime();
+        DateTime today = localNow.Date;
+        DateTimeOffset startOfToday = new(today, localNow.Offset);
+        long startOfTodayMs = startOfToday.ToUniversalTime().ToUnixTimeMilliseconds();
+        long endOfTodayMs = startOfToday.AddDays(1).ToUniversalTime().ToUnixTimeMilliseconds();
+        long endOfThisWeekMs = startOfToday.AddDays(7).ToUniversalTime().ToUnixTimeMilliseconds();
+
+        switch (filter.Due)
+        {
+            case DueRange.Today:
+                where.Add("n.due_at >= $todayStart AND n.due_at < $todayEnd");
+                parameters["$todayStart"] = startOfTodayMs;
+                parameters["$todayEnd"] = endOfTodayMs;
+                break;
+            case DueRange.ThisWeek:
+                where.Add("n.due_at >= $todayStart AND n.due_at < $weekEnd");
+                parameters["$todayStart"] = startOfTodayMs;
+                parameters["$weekEnd"] = endOfThisWeekMs;
+                break;
+            case DueRange.Overdue:
+                where.Add("n.due_at IS NOT NULL AND n.due_at < $now");
+                parameters["$now"] = nowMs;
+                break;
+            case DueRange.None:
+                where.Add("n.due_at IS NULL");
+                break;
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Text))
+        {
+            where.Add("n.rowid IN (SELECT rowid FROM notes_fts WHERE notes_fts MATCH $text)");
+            parameters["$text"] = BuildFtsQuery(filter.Text);
+        }
+
+        if (where.Count > 0)
+        {
+            sql.Append(" WHERE ").Append(string.Join(" AND ", where));
+        }
+        sql.Append(" ORDER BY n.created_at DESC LIMIT $limit");
+        parameters["$limit"] = limit;
+
+        List<Note> list = new();
+        using SqliteCommand cmd = _db.Connection.CreateCommand();
+        cmd.CommandText = sql.ToString();
+        foreach (var kv in parameters)
+        {
+            cmd.Parameters.AddWithValue(kv.Key, kv.Value);
         }
         using SqliteDataReader reader = cmd.ExecuteReader();
         while (reader.Read())

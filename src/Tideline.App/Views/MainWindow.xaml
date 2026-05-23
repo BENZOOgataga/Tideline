@@ -46,6 +46,12 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItemSeparator />
+                <NavigationViewItem Content="Saved views" Tag="saved">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE74E;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItemSeparator />
                 <NavigationViewItem Content="Settings" Tag="settings">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE713;" />

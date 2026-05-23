@@ -59,6 +59,9 @@ public sealed partial class MainWindow : Window
             case "spaces":
                 ContentFrame.Navigate(typeof(SpacesPage), _host);
                 break;
+            case "saved":
+                ContentFrame.Navigate(typeof(SavedViewsPage), _host);
+                break;
             case "settings":
                 ContentFrame.Navigate(typeof(SettingsPage), _host);
                 break;

@@ -16,6 +16,7 @@ public sealed class AppHost : IDisposable
     public SpaceRepository Spaces { get; }
     public TagRepository Tags { get; }
     public AttachmentRepository Attachments { get; }
+    public SavedFilterRepository SavedFilters { get; }
     public BriefingService Briefing { get; }
     public string? HotkeyError { get; set; }
 
@@ -29,6 +30,7 @@ public sealed class AppHost : IDisposable
         Spaces = new SpaceRepository(db, clock);
         Tags = new TagRepository(db);
         Attachments = new AttachmentRepository(db, clock);
+        SavedFilters = new SavedFilterRepository(db);
         Briefing = new BriefingService(db, Notes, clock);
     }
 
