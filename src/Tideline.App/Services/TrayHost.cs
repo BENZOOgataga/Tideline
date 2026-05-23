@@ -124,6 +124,9 @@ public sealed class TrayHost : IDisposable
             Text = text,
             Icon = new SymbolIcon(symbol),
             IsEnabled = onClick is not null,
+            // SecondWindow popup sizes from the first measure pass, before
+            // the presenter style applies, so we force width per item too.
+            MinWidth = 300,
         };
         if (!string.IsNullOrEmpty(accelerator))
         {
