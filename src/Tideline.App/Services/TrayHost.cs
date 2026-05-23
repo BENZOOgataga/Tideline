@@ -26,10 +26,12 @@ public sealed class TrayHost : IDisposable
         {
             ToolTipText = "Tideline",
             NoLeftClickDelay = true,
-            // ActiveWindow routes the menu through the main window's XamlRoot
-            // instead of H.NotifyIcon's hidden host (which auto-dismisses on
-            // cursor leave). Icons, accelerator text, and SemiBold all render.
-            ContextMenuMode = H.NotifyIcon.ContextMenuMode.ActiveWindow,
+            // PopupMenu uses a native Win32 context menu. It always opens on
+            // right-click, stays open until the user picks an item or clicks
+            // elsewhere, and respects the tray-resident lifecycle (no main
+            // window required). SecondWindow auto-dismissed on cursor leave;
+            // ActiveWindow needed a visible main window.
+            ContextMenuMode = H.NotifyIcon.ContextMenuMode.PopupMenu,
         };
 
         try
