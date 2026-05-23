@@ -26,6 +26,11 @@ public sealed class TrayHost : IDisposable
         {
             ToolTipText = "Tideline",
             NoLeftClickDelay = true,
+            // SecondWindow hosts the menu in a hidden WinUI window so
+            // MenuFlyoutItem.Icon, KeyboardAcceleratorTextOverride and
+            // FontWeight all render. The default PopupMenu mode is a
+            // native Win32 menu (text-only).
+            ContextMenuMode = H.NotifyIcon.ContextMenuMode.SecondWindow,
         };
 
         try
