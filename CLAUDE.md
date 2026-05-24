@@ -20,6 +20,18 @@ Match the prose character rule defined in [docs/plans/SPEC.md](docs/plans/SPEC.m
 - Keep commit subjects lowercase, in the imperative mood, with no trailing period.
 - Do not add co-authors or `Co-authored-by` trailers.
 
+## Releases
+
+- Do NOT create releases (tags, `gh release create`, version bumps) on
+  your own initiative.
+- Only create a release when the user explicitly asks for one AND the
+  user is the one with the GitHub permissions to publish it; the agent
+  is acting on their behalf, not auto-shipping.
+- Pushing a `v*` tag triggers the release workflow and publishes a
+  GitHub Release that is immediately visible to anyone watching the
+  repo. That is a public action, treat it like one.
+- Hotfixes still need the same explicit go-ahead. Wait, ask, then act.
+
 ## Source of truth
 
 [`docs/plans/SPEC.md`](docs/plans/SPEC.md) is the canonical design.
