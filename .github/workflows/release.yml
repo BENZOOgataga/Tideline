@@ -64,7 +64,12 @@ jobs:
           Copy-Item publish/client/tideline-capture.exe publish/app/tideline-capture.exe -Force
 
       - name: Install Velopack CLI
-        run: dotnet tool install -g vpk
+        # Pin to the same version as the Velopack NuGet reference in
+        # Tideline.App so Update.exe and the in-app library can talk to
+        # each other. A vpk that ships ahead of the lib leaves
+        # WindowsVelopackLocator unable to initialise, which silently
+        # disables the in-app update check.
+        run: dotnet tool install -g vpk --version 0.0.1298
 
       - name: Pack with Velopack
         shell: pwsh
