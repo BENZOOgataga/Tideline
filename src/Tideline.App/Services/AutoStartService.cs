@@ -49,7 +49,10 @@ public sealed class AutoStartService
             using RegistryKey? approved = Registry.CurrentUser.OpenSubKey(StartupApprovedRunPath, writable: false);
             if (approved?.GetValue(RunValueName) is byte[] blob && blob.Length > 0)
             {
-                bool disabledByUser = (blob[0] & 0x01) == 0x00; // 0x02 disabled, 0x03/0x06 enabled
+                // Task Manager writes 0x02 (default-enabled) or 0x06 when enabled
+                // and 0x03 when disabled by the user. The low bit being set marks
+                // the disabled state.
+                bool disabledByUser = (blob[0] & 0x01) != 0;
                 return !disabledByUser;
             }
             return true;
@@ -78,7 +81,7 @@ public sealed class AutoStartService
                 using RegistryKey? approved = Registry.CurrentUser.OpenSubKey(StartupApprovedRunPath, writable: true);
                 if (approved is not null)
                 {
-                    // 12-byte blob: first DWORD = 0x00000002 (enabled, no-disable bits set),
+                    // 12-byte blob: first DWORD = 0x00000002 (enabled, low bit clear),
                     // remaining 8 bytes = last-disable FILETIME (zeroed on enable).
                     byte[] enabled = new byte[12];
                     enabled[0] = 0x02; enabled[1] = 0x00; enabled[2] = 0x00; enabled[3] = 0x00;
