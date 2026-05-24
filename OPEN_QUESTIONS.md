@@ -29,17 +29,6 @@ as a stopgap that needs a real answer is also recorded here.
   `Program.Main`, and replace the body of `UpdateService.CheckOnceFireAndForget()`
   with an `UpdateManager` check against the GitHub Releases feed.
 
-- **Stream Deck plugin port to SDK 6.** The scaffold in
-  [`tools/streamdeck-plugin/`](tools/streamdeck-plugin/) was written
-  against the legacy Stream Deck SDK v2 (HTML / WebView), which runs in
-  a Chromium sandbox with no Node access, so `plugin.js` cannot spawn
-  `tideline-capture.exe`. The bundled `.streamDeckPlugin` therefore
-  does not work as-is. Workaround that works today: use Stream Deck's
-  built-in System -> Open action against `tideline-capture.exe` (see
-  the plugin README). Permanent fix: port the plugin to Stream Deck
-  SDK 6 (Node-based runtime) so plugin.js can actually invoke the
-  helper.
-
 - **Code signing.** Per SPEC section 19.3, v1 ships unsigned, with the
   README documenting the SmartScreen "Run anyway" path. Pick a signing
   story (free OSS via SignPath, or paid OV/EV cert) before broad

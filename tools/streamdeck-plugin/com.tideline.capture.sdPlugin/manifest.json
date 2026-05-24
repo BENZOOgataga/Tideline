@@ -1,35 +1,41 @@
 {
   "Name": "Tideline",
-  "Version": "1.0.0",
-  "Author": "Tideline",
+  "Version": "1.1.0.0",
+  "Author": "BENZOOgataga",
   "URL": "https://github.com/BENZOOgataga/Tideline",
-  "Icon": "tidelineIcon",
-  "Description": "Trigger a Tideline capture overlay from a Stream Deck button.",
+  "Description": "Open the Tideline capture overlay from a Stream Deck button.",
+  "Icon": "imgs/tidelineIcon",
   "Category": "Tideline",
-  "CategoryIcon": "tidelineIcon",
-  "CodePath": "plugin/index.html",
-  "PropertyInspectorPath": "plugin/inspector.html",
-  "DefaultWindowSize": [500, 250],
+  "CategoryIcon": "imgs/tidelineIcon",
+  "CodePath": "bin/plugin.js",
+  "PropertyInspectorPath": "ui/inspector.html",
+  "DefaultWindowSize": [500, 280],
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.5"
+  },
   "OS": [
     {
       "Platform": "windows",
       "MinimumVersion": "10"
     }
   ],
-  "Software": {
-    "MinimumVersion": "6.0"
+  "Nodejs": {
+    "Version": "20",
+    "Debug": "enabled"
   },
-  "SDKVersion": 2,
+  "UUID": "com.tideline.capture",
   "Actions": [
     {
       "Name": "Capture to Tideline",
       "UUID": "com.tideline.capture.action",
-      "Icon": "tidelineIcon",
+      "Icon": "imgs/tidelineIcon",
       "Tooltip": "Open the Tideline capture overlay.",
-      "PropertyInspectorPath": "plugin/inspector.html",
+      "PropertyInspectorPath": "ui/inspector.html",
+      "Controllers": ["Keypad"],
       "States": [
         {
-          "Image": "tidelineIcon",
+          "Image": "imgs/tidelineIcon",
           "TitleAlignment": "middle",
           "FontSize": "12"
         }

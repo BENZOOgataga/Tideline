@@ -1,0 +1,13 @@
+{
+  "name": "com.tideline.capture.sdplugin",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Stream Deck plugin that opens the Tideline capture overlay.",
+  "main": "bin/plugin.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

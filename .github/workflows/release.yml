@@ -78,13 +78,23 @@ jobs:
             --mainExe Tideline.exe `
             --outputDir releases
 
+      - name: Set up Node for Stream Deck plugin
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Stage Stream Deck plugin
         shell: pwsh
         run: |
           $pluginDir = 'tools/streamdeck-plugin/com.tideline.capture.sdPlugin'
           $binDir = Join-Path $pluginDir 'bin'
           New-Item -ItemType Directory -Force -Path $binDir | Out-Null
+          # Bundle the capture helper exe alongside the Node plugin entry.
           Copy-Item publish/client/tideline-capture.exe (Join-Path $binDir 'tideline-capture.exe') -Force
+          # Install runtime npm deps (ws). package-lock.json is committed.
+          Push-Location $pluginDir
+          npm ci --omit=dev --no-audit --no-fund
+          Pop-Location
           Compress-Archive -Path $pluginDir -DestinationPath Tideline.streamDeckPlugin.zip -Force
           Move-Item Tideline.streamDeckPlugin.zip Tideline.streamDeckPlugin -Force
 

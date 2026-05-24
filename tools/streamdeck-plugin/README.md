@@ -1,68 +1,70 @@
 # Tideline Stream Deck plugin
 
-A small Stream Deck plugin that triggers the Tideline capture overlay over
-the local named pipe (`\\.\pipe\tideline`).
+A Stream Deck plugin that opens the Tideline capture overlay by spawning
+the `tideline-capture.exe` helper, which writes `{"cmd":"capture"}` to
+the resident app's named pipe (`\\.\pipe\tideline`).
 
-## Status of the bundled plugin
+Built against **Stream Deck SDK 6** (Node runtime), so the plugin can
+actually shell out to the helper. The earlier SDK v2 (HTML / Chromium
+sandbox) attempt could not spawn processes.
 
-**The bundled `Tideline.streamDeckPlugin` does not work as-is in v0.1.0.**
+## Install
 
-It was scaffolded against the legacy Stream Deck SDK v2 model where the
-plugin runs in a sandboxed Chromium webview. That model has no Node
-access, so `plugin.js` cannot `require('child_process')` to spawn the
-`tideline-capture` helper. The bundle still ships in the release for
-inspection and as a starting point for the rewrite.
+1. Download `Tideline.streamDeckPlugin` from a release.
+2. Double-click the file. Stream Deck imports it and offers the
+   **Capture to Tideline** action under the **Tideline** category.
+3. Drag the action onto a button.
+4. (Optional) Open the action's property inspector. The default
+   `tideline-capture.exe` path resolves to the standard Velopack install
+   location (`%LocalAppData%\Tideline\current\tideline-capture.exe`), so
+   you only need to override it if you installed elsewhere.
+5. Optionally fill in pre-filled text; the helper passes it to the app
+   via `--text`.
+6. Press the button. The capture overlay opens.
 
-The real fix is to port the plugin to **Stream Deck SDK 6** (Node-based
-runtime), so `plugin.js` runs in a real Node process that can spawn
-helpers. Tracked in [OPEN_QUESTIONS.md](../../OPEN_QUESTIONS.md).
-
-## Quick workaround (works today, no custom plugin)
-
-Stream Deck has a built-in **System -> Open** action that runs an
-executable on press. Bind it to the bundled `tideline-capture.exe`:
-
-1. Open the Stream Deck app.
-2. Drag the **System -> Open** action onto a button.
-3. Set the App / File path to the helper exe, for example
-   `C:\Users\<you>\AppData\Local\Tideline\current\tideline-capture.exe`.
-4. Press the button. The helper writes `{"cmd":"capture"}` to
-   `\\.\pipe\tideline`, the resident Tideline raises the capture
-   overlay, and you type.
-
-Pass arguments via the same action to script richer captures, for
-example:
-
-```
-tideline-capture.exe --text "remind me later"
-```
-
-`tideline-capture.exe --show` brings the main window to the front.
-`tideline-capture.exe --count` prints `{"count":N}` (useful for
-diagnostics).
-
-## How the helper works
-
-The plugin (or any other launcher) calls `tideline-capture.exe`, which
-connects to the named pipe owned by the running Tideline app and writes
-one line of JSON. Tideline then raises the capture overlay through the
-same code path as the global Ctrl+Alt+N hotkey. The helper never
-touches the database, in line with the single-writer rule in
-SPEC section 16.
-
-## Build the helper
+## Develop locally
 
 ```powershell
-dotnet publish tools/Tideline.CaptureClient -c Release
+# From the plugin folder.
+cd tools/streamdeck-plugin/com.tideline.capture.sdPlugin
+npm install --omit=dev --no-audit --no-fund
+
+# Build the helper and copy it next to the plugin entry.
+dotnet publish ..\..\..\tools\Tideline.CaptureClient -c Release
+Copy-Item ..\..\..\tools\Tideline.CaptureClient\bin\Release\net8.0\win-x64\publish\tideline-capture.exe bin\tideline-capture.exe -Force
+
+# Hand the folder to Stream Deck (symlink or registerPlugin command).
 ```
 
-The `tideline-capture.exe` binary lands in
-`tools/Tideline.CaptureClient/bin/Release/net8.0/win-x64/publish/`.
-The release workflow also publishes it and copies it into the
-`.streamDeckPlugin` bundle's `bin/` folder.
+## Layout
 
-## Assets
+```
+com.tideline.capture.sdPlugin/
+├── manifest.json          SDK 6 manifest, declares Nodejs runtime
+├── package.json           bundled ws dependency
+├── package-lock.json
+├── bin/
+│   ├── plugin.js          plugin entry (Node)
+│   └── tideline-capture.exe  bundled by the release workflow
+├── ui/
+│   └── inspector.html     property inspector
+├── imgs/
+│   ├── tidelineIcon.png
+│   └── tidelineIcon@2x.png
+└── node_modules/          installed at release pack time (not committed)
+```
 
-`tidelineIcon.png` (144 px) and `tidelineIcon@2x.png` (288 px) are
-committed under `com.tideline.capture.sdPlugin/`, derived from the
-shared brand artwork. Stream Deck picks them up automatically.
+`node_modules/` is gitignored; the release workflow runs `npm ci --omit=dev`
+inside the plugin folder before zipping the `.streamDeckPlugin` bundle.
+
+## Why a custom plugin and not System -> Open
+
+Stream Deck's built-in **System -> Open** action also works for a basic
+"open overlay on press" button by pointing it at `tideline-capture.exe`.
+The custom plugin adds:
+
+- A discoverable Tideline category and action in the Stream Deck library.
+- A per-button **Pre-filled text** option so different buttons capture
+  different canned notes via `--text`.
+- A default path that resolves to the standard Velopack install so most
+  users do not have to type a path at all.

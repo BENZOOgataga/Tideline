@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Tideline action settings</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 12px;
+        padding: 14px;
+        color: #ddd;
+        background: #2d2d2d;
+        margin: 0;
+      }
+      h3 { margin: 0 0 8px; font-size: 13px; }
+      p  { margin: 0 0 12px; color: #aaa; }
+      label { display: block; margin-top: 10px; font-size: 11px; color: #bbb; }
+      input { width: 100%; padding: 6px 8px; font-size: 12px; box-sizing: border-box;
+              background: #1f1f1f; color: #fff; border: 1px solid #444; border-radius: 4px; }
+      input:focus { border-color: #6aa1ff; outline: none; }
+      code { background: #1f1f1f; padding: 2px 4px; border-radius: 3px; }
+    </style>
+  </head>
+  <body>
+    <h3>Capture to Tideline</h3>
+    <p>Press the button to raise the Tideline capture overlay via the local named pipe.</p>
+
+    <label for="captureExePath">Path to <code>tideline-capture.exe</code></label>
+    <input id="captureExePath" type="text" placeholder="leave empty to use the default install path" />
+
+    <label for="captureText">Pre-filled text (optional)</label>
+    <input id="captureText" type="text" placeholder="leave empty to open empty overlay" />
+
+    <script>
+      let ws = null, uuid = null, actionInfo = null;
+
+      function connectElgatoStreamDeckSocket(inPort, inUUID, inRegEvent, inInfo, inActionInfo) {
+        uuid = inUUID;
+        actionInfo = JSON.parse(inActionInfo);
+        ws = new WebSocket('ws://127.0.0.1:' + inPort);
+        ws.onopen = () => {
+          ws.send(JSON.stringify({ event: inRegEvent, uuid: inUUID }));
+          const s = (actionInfo && actionInfo.payload && actionInfo.payload.settings) || {};
+          document.getElementById('captureExePath').value = s.captureExePath || '';
+          document.getElementById('captureText').value   = s.captureText   || '';
+        };
+      }
+
+      function save() {
+        if (!ws || !actionInfo) return;
+        const settings = {
+          captureExePath: document.getElementById('captureExePath').value,
+          captureText:    document.getElementById('captureText').value,
+        };
+        ws.send(JSON.stringify({
+          event: 'setSettings',
+          context: actionInfo.context,
+          payload: settings,
+        }));
+      }
+
+      // Save on every keystroke + blur so the inspector never loses input.
+      for (const id of ['captureExePath', 'captureText']) {
+        const el = document.getElementById(id);
+        el.addEventListener('input', save);
+        el.addEventListener('change', save);
+        el.addEventListener('blur', save);
+      }
+    </script>
+  </body>
+</html>

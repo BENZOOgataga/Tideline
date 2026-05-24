@@ -32,6 +32,7 @@ logs/
 # Package and dependency caches
 packages/
 node_modules/
+tools/streamdeck-plugin/com.tideline.capture.sdPlugin/node_modules/
 
 # Stream Deck plugin packaging
 *.streamDeckPlugin
