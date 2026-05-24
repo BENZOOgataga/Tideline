@@ -85,8 +85,14 @@ internal static class Win32
     public static extern IntPtr GetModuleHandleW(string? lpModuleName);
 
     // DWM attributes (dwmapi.h)
+    public const int DWMWA_NCRENDERING_POLICY = 2;
     public const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     public const int DWMWA_BORDER_COLOR = 34;
+    public const int DWMWA_CAPTION_COLOR = 35;
+
+    public const int DWMNCRP_USEWINDOWSTYLE = 0;
+    public const int DWMNCRP_DISABLED = 1;
+    public const int DWMNCRP_ENABLED = 2;
 
     public const int DWMWCP_DEFAULT = 0;
     public const int DWMWCP_DONOTROUND = 1;

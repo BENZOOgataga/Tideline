@@ -54,17 +54,34 @@ public sealed partial class CaptureWindow : Window
         try
         {
             IntPtr hwnd = WindowNative.GetWindowHandle(this);
+
             // Rounded corners on Windows 11. No-op on Windows 10.
             int corner = Win32.DWMWCP_ROUND;
-            Win32.DwmSetWindowAttribute(hwnd, Win32.DWMWA_WINDOW_CORNER_PREFERENCE, ref corner, sizeof(int));
-            // Strip the bright system border that shows on borderless windows.
+            int hrCorner = Win32.DwmSetWindowAttribute(hwnd, Win32.DWMWA_WINDOW_CORNER_PREFERENCE, ref corner, sizeof(int));
+
+            // Strip the bright system border.
             uint borderColor = Win32.DWMWA_COLOR_NONE;
-            Win32.DwmSetWindowAttribute(hwnd, Win32.DWMWA_BORDER_COLOR, ref borderColor, sizeof(uint));
+            int hrBorder = Win32.DwmSetWindowAttribute(hwnd, Win32.DWMWA_BORDER_COLOR, ref borderColor, sizeof(uint));
+
+            // Also strip the caption colour in case the system still paints a 1px caption strip.
+            uint captionColor = Win32.DWMWA_COLOR_NONE;
+            int hrCaption = Win32.DwmSetWindowAttribute(hwnd, Win32.DWMWA_CAPTION_COLOR, ref captionColor, sizeof(uint));
+
+            // Disable non-client rendering entirely so DWM stops drawing a frame.
+            int policy = Win32.DWMNCRP_DISABLED;
+            int hrNc = Win32.DwmSetWindowAttribute(hwnd, Win32.DWMWA_NCRENDERING_POLICY, ref policy, sizeof(int));
+
+            if (hrCorner != 0 || hrBorder != 0 || hrCaption != 0 || hrNc != 0)
+            {
+                CrashLog.Write("Capture.Dwm",
+                    new InvalidOperationException(
+                        $"corner={hrCorner:X} border={hrBorder:X} caption={hrCaption:X} nc={hrNc:X}"));
+            }
             _decorationsApplied = true;
         }
-        catch
+        catch (Exception ex)
         {
-            // best effort; OS may be old or DWM unavailable
+            CrashLog.Write("Capture.ApplyWindowDecorations", ex);
         }
     }
 
@@ -73,9 +90,6 @@ public sealed partial class CaptureWindow : Window
         try
         {
             IntPtr hwnd = WindowNative.GetWindowHandle(this);
-            // Attach our thread to the current foreground thread so Windows
-            // grants us SetForegroundWindow even when the user invoked
-            // capture from another app via the global hotkey or pipe.
             IntPtr fg = Win32.GetForegroundWindow();
             uint fgThread = Win32.GetWindowThreadProcessId(fg, out _);
             uint myThread = Win32.GetCurrentThreadId();
@@ -90,11 +104,28 @@ public sealed partial class CaptureWindow : Window
                 Win32.AttachThreadInput(fgThread, myThread, false);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // ignored
+            CrashLog.Write("Capture.ForceForeground", ex);
         }
-        CaptureBox.Focus(FocusState.Keyboard);
+
+        // Defer the actual focus call so the TextBox has had a chance to
+        // attach to the visual tree and the foreground change above has
+        // settled. Without this the Focus call frequently returns false
+        // because the control is not yet in the input chain.
+        this.DispatcherQueue.TryEnqueue(
+            Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
+            () =>
+            {
+                bool ok = CaptureBox.Focus(FocusState.Programmatic);
+                if (!ok)
+                {
+                    // One more retry on the next tick.
+                    this.DispatcherQueue.TryEnqueue(
+                        Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
+                        () => CaptureBox.Focus(FocusState.Programmatic));
+                }
+            });
     }
 
     private void OnActivated(object sender, WindowActivatedEventArgs args)
