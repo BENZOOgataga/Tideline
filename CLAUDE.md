@@ -39,6 +39,20 @@ Match the prose character rule defined in [docs/plans/SPEC.md](docs/plans/SPEC.m
 did not decide. Do not silently guess on a fork in the spec; add to
 OPEN_QUESTIONS and pick the most minimal, reversible option.
 
+## Agent docs
+
+Onboarding material for any agent picking up the project lives under
+[`docs/agents/`](docs/agents/):
+
+- [`docs/agents/HANDOFF.md`](docs/agents/HANDOFF.md) -> project state, build, run, test, stop conditions.
+- [`docs/agents/ARCHITECTURE.md`](docs/agents/ARCHITECTURE.md) -> module boundaries and key flows (capture, briefing, IPC, auto-start, update).
+- [`docs/agents/COMMON_ISSUES.md`](docs/agents/COMMON_ISSUES.md) -> traps already paid for. Read first when something feels weird; add to it when you pay for a new one.
+- [`docs/agents/RELEASING.md`](docs/agents/RELEASING.md) -> how the release pipeline works. Agents do not initiate releases.
+
+For the full layout / flow / contracts, the agent docs above are the
+single source of truth. The summary below is kept here for quick
+reference at the top of a session.
+
 ## Solution layout
 
 ```
