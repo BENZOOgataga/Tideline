@@ -31,14 +31,12 @@ public sealed partial class CaptureWindow : Window
             AppWindow.SetIcon(Brand.IconPath);
         }
 
-        if (AppWindow.Presenter is OverlappedPresenter overlapped)
-        {
-            overlapped.SetBorderAndTitleBar(false, false);
-            overlapped.IsResizable = false;
-            overlapped.IsMaximizable = false;
-            overlapped.IsMinimizable = false;
-            overlapped.IsAlwaysOnTop = true;
-        }
+        // CreateForContextMenu gives a fully borderless popup-style window:
+        // no NC frame, no title bar, no resize border. Designed for menus
+        // and quick overlays, exactly the capture surface shape.
+        OverlappedPresenter popup = OverlappedPresenter.CreateForContextMenu();
+        popup.IsAlwaysOnTop = true;
+        AppWindow.SetPresenter(popup);
 
         AppWindow.Resize(new SizeInt32(680, 132));
         CenterOnScreen();
