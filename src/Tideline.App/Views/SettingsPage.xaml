@@ -90,6 +90,54 @@
                                Text="Tideline is local-first. No telemetry, no accounts, no cloud sync. Archived notes are permanently deleted 90 days after they were archived, never pinned notes, and only on app launch." />
                 </StackPanel>
             </Border>
+
+            <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="20">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="About" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                    <Grid ColumnSpacing="16" RowSpacing="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="App"        Opacity="0.6" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="AppNameText"      IsTextSelectionEnabled="True" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Version"    Opacity="0.6" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="VersionText"      IsTextSelectionEnabled="True" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Build"      Opacity="0.6" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BuildText"        IsTextSelectionEnabled="True" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Install"    Opacity="0.6" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="InstallText"      IsTextSelectionEnabled="True" />
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Updates"    Opacity="0.6" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="UpdateStatusText" IsTextSelectionEnabled="True" />
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="CheckUpdatesButton"
+                                Content="Check for updates"
+                                Click="CheckUpdates_Click" />
+                        <Button x:Name="OpenReleasesButton"
+                                Content="Open releases page"
+                                Click="OpenReleases_Click" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </Page>

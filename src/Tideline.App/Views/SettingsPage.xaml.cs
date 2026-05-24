@@ -1,3 +1,6 @@
+using System;
+using System.Diagnostics;
+using System.Reflection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
@@ -41,7 +44,49 @@ public sealed partial class SettingsPage : Page
             _ => 0,
         };
         _suppressTheme = false;
+
+        PopulateAbout();
         base.OnNavigatedTo(e);
+    }
+
+    private void PopulateAbout()
+    {
+        AppNameText.Text = Brand.DisplayName;
+
+        Assembly asm = typeof(SettingsPage).Assembly;
+        string informational = asm.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? string.Empty;
+        string file = asm.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? string.Empty;
+        string display = !string.IsNullOrEmpty(informational) ? informational : (file.Length > 0 ? file : "unknown");
+        VersionText.Text = display;
+
+#if DEBUG
+        BuildText.Text = "Debug";
+#else
+        BuildText.Text = "Release";
+#endif
+
+        UpdateService? updates = App.Current?.Updates;
+        if (updates is null)
+        {
+            InstallText.Text = "Update service not initialised";
+            UpdateStatusText.Text = "Unavailable";
+        }
+        else if (!updates.IsInstalledBuild)
+        {
+            InstallText.Text = "Source / dev build (no Velopack install)";
+            UpdateStatusText.Text = "Skipped (dev build)";
+            CheckUpdatesButton.IsEnabled = false;
+        }
+        else
+        {
+            InstallText.Text = $"Installed via Velopack at {AppContext.BaseDirectory}";
+            UpdateStatusText.Text = updates.HasUpdate
+                ? $"Update {updates.AvailableVersion} ready to install"
+                : updates.IsChecking ? "Checking..."
+                : updates.IsDownloading ? "Downloading..."
+                : updates.LastError is { } err ? $"Error: {err}"
+                : "Up to date";
+        }
     }
 
     private void AutoStartToggle_Toggled(object sender, RoutedEventArgs e)
@@ -79,5 +124,31 @@ public sealed partial class SettingsPage : Page
         };
         ThemePreference.Save(theme);
         ThemePreference.Apply(theme, App.Current?.GetActiveAppWindow());
+    }
+
+    private void CheckUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        UpdateStatusText.Text = "Checking...";
+        App.Current?.Updates?.CheckOnceFireAndForget();
+        // Refresh the row after a short tick; the call itself is async.
+        DispatcherQueue.TryEnqueue(
+            Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
+            PopulateAbout);
+    }
+
+    private void OpenReleases_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://github.com/BENZOOgataga/Tideline/releases",
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("OpenReleases", ex);
+        }
     }
 }
