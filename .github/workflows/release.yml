@@ -54,6 +54,15 @@ jobs:
           /p:Version=${{ steps.ver.outputs.version }}
           -o publish/client
 
+      - name: Copy capture client into app publish dir
+        shell: pwsh
+        run: |
+          # Ship tideline-capture.exe alongside Tideline.exe so the install
+          # at %LocalAppData%\Tideline\current\ exposes both binaries. Any
+          # Stream Deck button or shell shortcut can then point at the
+          # helper without a separate download.
+          Copy-Item publish/client/tideline-capture.exe publish/app/tideline-capture.exe -Force
+
       - name: Install Velopack CLI
         run: dotnet tool install -g vpk
 
