@@ -58,6 +58,16 @@ public sealed class UpdateService
         _ = Task.Run(CheckAsync);
     }
 
+    /// <summary>
+    /// Manual check from the tray menu or Settings; bypasses the per-session
+    /// guard so a user request always re-asks the feed.
+    /// </summary>
+    public void RecheckFireAndForget()
+    {
+        _checkedThisSession = true;
+        _ = Task.Run(CheckAsync);
+    }
+
     private async Task CheckAsync()
     {
         if (_mgr is null || !_mgr.IsInstalled) return;

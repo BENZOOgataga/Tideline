@@ -88,7 +88,7 @@ public sealed class TrayHost : IDisposable
         menu.Items.Add(BuildItem(
             text: "Check for updates",
             symbol: Symbol.Download,
-            onClick: null));
+            onClick: () => _app.Updates?.RecheckFireAndForget()));
 
         menu.Items.Add(new MenuFlyoutSeparator());
 

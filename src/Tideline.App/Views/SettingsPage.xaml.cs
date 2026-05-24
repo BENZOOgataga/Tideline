@@ -129,8 +129,8 @@ public sealed partial class SettingsPage : Page
     private void CheckUpdates_Click(object sender, RoutedEventArgs e)
     {
         UpdateStatusText.Text = "Checking...";
-        App.Current?.Updates?.CheckOnceFireAndForget();
-        // Refresh the row after a short tick; the call itself is async.
+        // Manual user request: bypass the once-per-session guard.
+        App.Current?.Updates?.RecheckFireAndForget();
         DispatcherQueue.TryEnqueue(
             Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
             PopulateAbout);
