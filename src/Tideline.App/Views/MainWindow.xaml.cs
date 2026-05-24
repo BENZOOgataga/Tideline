@@ -42,6 +42,29 @@ public sealed partial class MainWindow : Window
         }
 
         Navigate("briefing");
+
+        if (App.Current?.Updates is { } updates)
+        {
+            updates.UpdateReady += OnUpdateReady;
+            if (updates.HasUpdate) ShowUpdateBanner(updates.AvailableVersion);
+        }
+    }
+
+    private void OnUpdateReady()
+    {
+        ShowUpdateBanner(App.Current?.Updates?.AvailableVersion);
+    }
+
+    private void ShowUpdateBanner(string? version)
+    {
+        if (string.IsNullOrEmpty(version)) return;
+        UpdateBanner.Message = $"Tideline {version} is ready to install. Restart to apply.";
+        UpdateBanner.IsOpen = true;
+    }
+
+    private void UpdateInstall_Click(object sender, RoutedEventArgs e)
+    {
+        App.Current?.Updates?.ApplyAndRestart();
     }
 
     private void OnAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)

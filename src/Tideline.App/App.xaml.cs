@@ -18,6 +18,7 @@ public partial class App : Application
     public CaptureService Capture { get; private set; } = null!;
     public HotkeyService Hotkey { get; private set; } = null!;
     public IpcListener? Ipc { get; private set; }
+    public UpdateService Updates { get; private set; } = null!;
 
     /// <summary>
     /// True while QuitApp is tearing the process down. MainWindow's AppWindow.Closing
@@ -60,7 +61,13 @@ public partial class App : Application
         Ipc = new IpcListener(this, UiDispatcher);
         Ipc.Start();
 
+        Updates = new UpdateService(UiDispatcher);
+
         ShowMainWindow();
+
+        // Fire the once-per-session update check after the window is up.
+        // Silently no-ops in dev builds (no Velopack install metadata).
+        Updates.CheckOnceFireAndForget();
     }
 
     public void OnSecondaryInstanceActivated(AppActivationArguments args)

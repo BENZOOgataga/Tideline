@@ -13,6 +13,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="40" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -33,8 +34,22 @@
             </StackPanel>
         </Grid>
 
+        <InfoBar x:Name="UpdateBanner"
+                 Grid.Row="1"
+                 IsOpen="False"
+                 Severity="Informational"
+                 IsClosable="True"
+                 Margin="12,0,12,4"
+                 Title="Update ready"
+                 Message="">
+            <InfoBar.ActionButton>
+                <Button Content="Restart and install"
+                        Click="UpdateInstall_Click" />
+            </InfoBar.ActionButton>
+        </InfoBar>
+
         <NavigationView x:Name="Nav"
-                        Grid.Row="1"
+                        Grid.Row="2"
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="False"
                         IsTitleBarAutoPaddingEnabled="False"
