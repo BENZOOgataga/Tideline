@@ -48,6 +48,20 @@ public sealed partial class MainWindow : Window
             updates.UpdateReady += OnUpdateReady;
             if (updates.HasUpdate) ShowUpdateBanner(updates.AvailableVersion);
         }
+
+        // Move initial focus off the NavigationView so the first selected
+        // item does not paint a keyboard focus ring on launch. Frame is set
+        // to UseSystemFocusVisuals=False so it absorbs focus silently.
+        Activated += OnFirstActivation;
+    }
+
+    private void OnFirstActivation(object sender, WindowActivatedEventArgs args)
+    {
+        if (args.WindowActivationState == WindowActivationState.Deactivated) return;
+        Activated -= OnFirstActivation;
+        DispatcherQueue.TryEnqueue(
+            Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
+            () => ContentFrame.Focus(FocusState.Pointer));
     }
 
     private void OnUpdateReady()

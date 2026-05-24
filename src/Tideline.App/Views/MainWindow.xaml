@@ -99,7 +99,10 @@
                 </NavigationViewItem>
             </NavigationView.MenuItems>
 
-            <Frame x:Name="ContentFrame" Padding="32,16,32,24" />
+            <Frame x:Name="ContentFrame"
+                   Padding="32,16,32,24"
+                   IsTabStop="True"
+                   UseSystemFocusVisuals="False" />
         </NavigationView>
     </Grid>
 </Window>
