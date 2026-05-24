@@ -52,6 +52,7 @@
                         Grid.Row="2"
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="False"
+                        IsPaneToggleButtonVisible="False"
                         IsTitleBarAutoPaddingEnabled="False"
                         PaneDisplayMode="Left"
                         OpenPaneLength="240"
