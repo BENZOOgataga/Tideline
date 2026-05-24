@@ -15,9 +15,12 @@ namespace Tideline.App.Services;
 /// </summary>
 public sealed class AutoStartService
 {
-    public const string RunValueName = "Tideline";
     public const string StartupArg = "--startup";
     public const int DefaultDelaySeconds = 8;
+
+    // Brand-aware Run value name so dev and release installs have separate
+    // Task Manager entries and never collide when both are present.
+    public static string RunValueName => Brand.DisplayName;
 
     private const string LegacyTaskName = "Tideline-AutoStart";
     private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";

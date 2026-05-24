@@ -20,6 +20,15 @@
     <ApplicationIcon>Assets/Tideline.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <AssemblyTitle>Tideline Development</AssemblyTitle>
+    <Product>Tideline Development</Product>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' != 'Debug'">
+    <AssemblyTitle>Tideline</AssemblyTitle>
+    <Product>Tideline</Product>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.241114003" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.3233" />
