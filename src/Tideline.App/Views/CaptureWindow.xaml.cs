@@ -16,6 +16,7 @@ public sealed partial class CaptureWindow : Window
 {
     private readonly AppHost _host;
     private bool _saved;
+    private bool _decorationsApplied;
 
     public event Action<Note>? NoteSaved;
 
@@ -23,9 +24,12 @@ public sealed partial class CaptureWindow : Window
     {
         _host = host;
         InitializeComponent();
-        Title = "Tideline capture";
+        Title = Brand.DisplayName + " capture";
 
-        AppWindow.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Tideline.ico"));
+        if (System.IO.File.Exists(Brand.IconPath))
+        {
+            AppWindow.SetIcon(Brand.IconPath);
+        }
 
         if (AppWindow.Presenter is OverlappedPresenter overlapped)
         {
@@ -46,6 +50,7 @@ public sealed partial class CaptureWindow : Window
 
     private void ApplyWindowDecorations()
     {
+        if (_decorationsApplied) return;
         try
         {
             IntPtr hwnd = WindowNative.GetWindowHandle(this);
@@ -55,11 +60,41 @@ public sealed partial class CaptureWindow : Window
             // Strip the bright system border that shows on borderless windows.
             uint borderColor = Win32.DWMWA_COLOR_NONE;
             Win32.DwmSetWindowAttribute(hwnd, Win32.DWMWA_BORDER_COLOR, ref borderColor, sizeof(uint));
+            _decorationsApplied = true;
         }
         catch
         {
             // best effort; OS may be old or DWM unavailable
         }
+    }
+
+    private void ForceForegroundAndFocus()
+    {
+        try
+        {
+            IntPtr hwnd = WindowNative.GetWindowHandle(this);
+            // Attach our thread to the current foreground thread so Windows
+            // grants us SetForegroundWindow even when the user invoked
+            // capture from another app via the global hotkey or pipe.
+            IntPtr fg = Win32.GetForegroundWindow();
+            uint fgThread = Win32.GetWindowThreadProcessId(fg, out _);
+            uint myThread = Win32.GetCurrentThreadId();
+            bool attached = false;
+            if (fgThread != 0 && fgThread != myThread)
+            {
+                attached = Win32.AttachThreadInput(fgThread, myThread, true);
+            }
+            Win32.SetForegroundWindow(hwnd);
+            if (attached)
+            {
+                Win32.AttachThreadInput(fgThread, myThread, false);
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+        CaptureBox.Focus(FocusState.Keyboard);
     }
 
     private void OnActivated(object sender, WindowActivatedEventArgs args)
@@ -70,7 +105,8 @@ public sealed partial class CaptureWindow : Window
             Close();
             return;
         }
-        CaptureBox.Focus(FocusState.Programmatic);
+        ApplyWindowDecorations();
+        ForceForegroundAndFocus();
     }
 
     private void OnAppWindowClosing(AppWindow sender, AppWindowClosingEventArgs args)

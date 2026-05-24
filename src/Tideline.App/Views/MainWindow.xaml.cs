@@ -18,9 +18,10 @@ public sealed partial class MainWindow : Window
     {
         _host = host;
         InitializeComponent();
-        Title = "Tideline";
+        Title = Brand.DisplayName;
+        AppTitleText.Text = Brand.DisplayName;
 
-        string iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Tideline.ico");
+        string iconPath = Brand.IconPath;
         if (File.Exists(iconPath))
         {
             AppWindow.SetIcon(iconPath);
@@ -34,7 +35,7 @@ public sealed partial class MainWindow : Window
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
 
-        string pngPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Tideline.png");
+        string pngPath = Brand.PngPath;
         if (File.Exists(pngPath))
         {
             AppTitleIcon.Source = new BitmapImage(new Uri(pngPath));

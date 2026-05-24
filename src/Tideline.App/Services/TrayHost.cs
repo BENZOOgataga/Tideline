@@ -24,7 +24,7 @@ public sealed class TrayHost : IDisposable
         _app = app;
         _icon = new TaskbarIcon
         {
-            ToolTipText = "Tideline",
+            ToolTipText = Brand.DisplayName,
             NoLeftClickDelay = true,
             // PopupMenu uses a native Win32 context menu. It always opens on
             // right-click, stays open until the user picks an item or clicks
@@ -36,7 +36,7 @@ public sealed class TrayHost : IDisposable
 
         try
         {
-            string iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Tideline.ico");
+            string iconPath = Brand.IconPath;
             if (System.IO.File.Exists(iconPath))
             {
                 _icon.IconSource = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(iconPath));
