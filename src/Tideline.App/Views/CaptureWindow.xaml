@@ -9,61 +9,79 @@
         <DesktopAcrylicBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid x:Name="Root">
-        <!-- Faint accent rail on the left so the overlay reads as a capture surface -->
-        <Border Width="3"
-                HorizontalAlignment="Left"
-                Background="{ThemeResource AccentFillColorDefaultBrush}"
-                Opacity="0.8" />
+    <Border x:Name="RootShell"
+            CornerRadius="10"
+            BorderThickness="1"
+            BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+            Padding="0">
+        <Grid>
+            <!-- Slim accent rail tucked inside the rounded corners. -->
+            <Border Width="3"
+                    HorizontalAlignment="Left"
+                    Background="{ThemeResource AccentFillColorDefaultBrush}"
+                    Opacity="0.85"
+                    CornerRadius="10,0,0,10" />
 
-        <Grid Padding="28,18,24,16" RowSpacing="6">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+            <Grid Padding="26,18,22,16" RowSpacing="6">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" ColumnSpacing="14" VerticalAlignment="Center">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <FontIcon Grid.Column="0"
-                          Glyph="&#xE104;"
-                          FontSize="18"
-                          Opacity="0.45"
-                          VerticalAlignment="Center" />
-                <TextBox x:Name="CaptureBox"
-                         Grid.Column="1"
-                         PlaceholderText="Capture a thought..."
-                         AcceptsReturn="False"
-                         FontSize="18"
-                         FontWeight="SemiBold"
-                         BorderThickness="0"
-                         Background="Transparent"
-                         VerticalAlignment="Center"
-                         KeyDown="CaptureBox_KeyDown" />
-            </Grid>
+                <Grid Grid.Row="0" ColumnSpacing="14" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon Grid.Column="0"
+                              Glyph="&#xE104;"
+                              FontSize="18"
+                              Opacity="0.45"
+                              VerticalAlignment="Center" />
+                    <TextBox x:Name="CaptureBox"
+                             Grid.Column="1"
+                             PlaceholderText="Capture a thought..."
+                             AcceptsReturn="False"
+                             FontSize="18"
+                             FontWeight="SemiBold"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             VerticalAlignment="Center"
+                             KeyDown="CaptureBox_KeyDown">
+                        <TextBox.Resources>
+                            <SolidColorBrush x:Key="TextControlBackground" Color="Transparent" />
+                            <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Transparent" />
+                            <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent" />
+                            <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
+                            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
+                            <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" />
+                            <Thickness x:Key="TextControlBorderThemeThickness">0</Thickness>
+                            <Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness>
+                        </TextBox.Resources>
+                    </TextBox>
+                </Grid>
 
-            <Grid Grid.Row="1" ColumnSpacing="12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0"
-                           Text="Inline #hashtags become tags."
-                           Style="{ThemeResource CaptionTextBlockStyle}"
-                           Opacity="0.5" />
-                <StackPanel Grid.Column="1"
-                            Orientation="Horizontal"
-                            Spacing="14">
-                    <TextBlock Style="{ThemeResource CaptionTextBlockStyle}" Opacity="0.5">
-                        <Run Text="Enter" FontWeight="SemiBold" /> save
-                    </TextBlock>
-                    <TextBlock Style="{ThemeResource CaptionTextBlockStyle}" Opacity="0.5">
-                        <Run Text="Esc" FontWeight="SemiBold" /> cancel
-                    </TextBlock>
-                </StackPanel>
+                <Grid Grid.Row="1" ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"
+                               Text="Inline #hashtags become tags."
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Opacity="0.5" />
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="14">
+                        <TextBlock Style="{ThemeResource CaptionTextBlockStyle}" Opacity="0.5">
+                            <Run Text="Enter" FontWeight="SemiBold" /> save
+                        </TextBlock>
+                        <TextBlock Style="{ThemeResource CaptionTextBlockStyle}" Opacity="0.5">
+                            <Run Text="Esc" FontWeight="SemiBold" /> cancel
+                        </TextBlock>
+                    </StackPanel>
+                </Grid>
             </Grid>
         </Grid>
-    </Grid>
+    </Border>
 </Window>
