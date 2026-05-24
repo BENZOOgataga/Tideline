@@ -3,6 +3,7 @@ using System.Threading;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
+using Velopack;
 
 namespace Tideline.App;
 
@@ -13,6 +14,11 @@ public static class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        // VelopackApp must run before any UI work so install / update /
+        // uninstall hook arguments are handled and the app may exit early
+        // during a Velopack lifecycle event.
+        VelopackApp.Build().Run();
+
         WinRT.ComWrappersSupport.InitializeComWrappers();
 
         bool isRedirect = DecideRedirection();
