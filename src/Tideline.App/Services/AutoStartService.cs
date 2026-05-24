@@ -151,4 +151,53 @@ public sealed class AutoStartService
             // task may not exist; ignore
         }
     }
+
+    /// <summary>
+    /// One-time migration for users who enabled auto-start on a version
+    /// that used the schtasks Task Scheduler task. If the legacy task is
+    /// present, we create the Run entry pointing at the current exe and
+    /// then sweep the task. A marker file in AppPaths.Root prevents
+    /// re-running.
+    /// </summary>
+    public void MigrateLegacyTaskIfPresent()
+    {
+        string markerPath = System.IO.Path.Combine(Tideline.Core.Data.AppPaths.Root, "autostart-migrated");
+        try
+        {
+            if (System.IO.File.Exists(markerPath)) return;
+
+            ProcessStartInfo psi = new("schtasks.exe", $"/Query /TN \"{LegacyTaskName}\"")
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            };
+            using Process? p = Process.Start(psi);
+            if (p is null) return;
+            p.WaitForExit(5000);
+            bool legacyPresent = p.ExitCode == 0;
+
+            if (legacyPresent && !string.IsNullOrEmpty(ExePath))
+            {
+                Enable(ExePath); // creates Run + sweeps legacy task
+            }
+        }
+        catch
+        {
+            // best effort
+        }
+        finally
+        {
+            try
+            {
+                Tideline.Core.Data.AppPaths.EnsureDirectories();
+                System.IO.File.WriteAllText(markerPath, DateTimeOffset.Now.ToString("O"));
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+    }
 }

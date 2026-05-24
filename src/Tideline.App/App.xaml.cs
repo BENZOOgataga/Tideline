@@ -61,6 +61,10 @@ public partial class App : Application
         Ipc = new IpcListener(this, UiDispatcher);
         Ipc.Start();
 
+        // One-time migration from the legacy Tideline-AutoStart schtasks
+        // entry to HKCU\Run. No-op for fresh installs.
+        try { new AutoStartService().MigrateLegacyTaskIfPresent(); } catch { }
+
         Updates = new UpdateService(UiDispatcher);
 
         // Auto-start launches stay in the tray; the user can click the
