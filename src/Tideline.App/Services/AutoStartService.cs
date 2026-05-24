@@ -48,9 +48,10 @@ public sealed class AutoStartService
 
         string xml = BuildTaskXml(exePath, delaySeconds);
         string xmlPath = Path.Combine(Path.GetTempPath(), $"tideline-autostart-{Guid.NewGuid():N}.xml");
-        // Encoding declared in BuildTaskXml must match what we write here,
-        // otherwise schtasks.exe can reject the task file on some systems.
-        File.WriteAllText(xmlPath, xml, new UTF8Encoding(true));
+        // schtasks /XML expects UTF-16 LE with BOM. The prolog declares
+        // UTF-16 to match; using UTF-8 here trips Windows with
+        // "incorrect document syntax".
+        File.WriteAllText(xmlPath, xml, Encoding.Unicode);
 
         try
         {
@@ -105,7 +106,7 @@ public sealed class AutoStartService
         string user = Environment.UserDomainName + "\\" + Environment.UserName;
         string delayIso = delaySeconds > 0 ? $"PT{delaySeconds}S" : "PT0S";
         string nowIso = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
-        string xml = $@"<?xml version=""1.0"" encoding=""UTF-8""?>
+        string xml = $@"<?xml version=""1.0"" encoding=""UTF-16""?>
 <Task version=""1.4"" xmlns=""http://schemas.microsoft.com/windows/2004/02/mit/task"">
   <RegistrationInfo>
     <Date>{nowIso}</Date>
