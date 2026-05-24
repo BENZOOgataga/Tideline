@@ -35,6 +35,19 @@ public sealed partial class MainWindow : Window
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
 
+        // Caption-button colours. Without these the system paints the close
+        // button in a stuck "hover" red because it has no resolved
+        // background to fall back to over our Mica content.
+        var titleBar = AppWindow.TitleBar;
+        titleBar.ButtonBackgroundColor              = Microsoft.UI.Colors.Transparent;
+        titleBar.ButtonInactiveBackgroundColor      = Microsoft.UI.Colors.Transparent;
+        titleBar.ButtonHoverBackgroundColor         = Microsoft.UI.Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF);
+        titleBar.ButtonPressedBackgroundColor       = Microsoft.UI.Color.FromArgb(0x55, 0xFF, 0xFF, 0xFF);
+        titleBar.ButtonForegroundColor              = Microsoft.UI.Color.FromArgb(0xFF, 0xE0, 0xE0, 0xE0);
+        titleBar.ButtonInactiveForegroundColor      = Microsoft.UI.Color.FromArgb(0xFF, 0x80, 0x80, 0x80);
+        titleBar.ButtonHoverForegroundColor         = Microsoft.UI.Colors.White;
+        titleBar.ButtonPressedForegroundColor       = Microsoft.UI.Colors.White;
+
         string pngPath = Brand.PngPath;
         if (File.Exists(pngPath))
         {
