@@ -5,6 +5,10 @@ out/
 artifacts/
 publish/
 
+# Stream Deck plugin keeps its Node entry under bin/ per SDK convention.
+!tools/streamdeck-plugin/com.tideline.capture.sdPlugin/bin/
+tools/streamdeck-plugin/com.tideline.capture.sdPlugin/bin/tideline-capture.exe
+
 # User-specific files
 *.user
 *.rsuser
