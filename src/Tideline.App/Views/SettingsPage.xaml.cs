@@ -38,6 +38,7 @@ public sealed partial class SettingsPage : Page
                 HotkeyWarning.IsOpen = true;
             }
         }
+        // Re-read each time so a toggle from Task Manager is reflected.
         _suppressToggle = true;
         AutoStartToggle.IsOn = _autoStart.IsEnabled();
         _suppressToggle = false;

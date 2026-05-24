@@ -1,34 +1,58 @@
 using System;
 using System.Diagnostics;
-using System.IO;
-using System.Text;
+using Microsoft.Win32;
 
 namespace Tideline.App.Services;
 
 /// <summary>
-/// Wraps schtasks.exe to create a per-user logon trigger with a small delay,
-/// as required by SPEC section 14. The HKCU Run key is deliberately avoided
-/// because it fires too early and competes with other startup programs.
+/// Auto-start via HKCU\...\Run so Tideline appears in Task Manager's
+/// Startup apps list and stays in sync when the user toggles it from
+/// there. The exe is launched with --startup so it self-delays before
+/// any heavy work, addressing the SPEC section 14 concern about
+/// fighting other startup programs for boot resources. The old
+/// schtasks-based task is deleted on Enable / Disable so a one-time
+/// transition from earlier versions is automatic.
 /// </summary>
 public sealed class AutoStartService
 {
-    public const string TaskName = "Tideline-AutoStart";
+    public const string RunValueName = "Tideline";
+    public const string StartupArg = "--startup";
     public const int DefaultDelaySeconds = 8;
 
+    private const string LegacyTaskName = "Tideline-AutoStart";
+    private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
+    private const string StartupApprovedRunPath = @"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
+
+    public string ExePath
+    {
+        get
+        {
+            string? path = Environment.ProcessPath;
+            return string.IsNullOrEmpty(path) ? string.Empty : path;
+        }
+    }
+
+    /// <summary>
+    /// Reports the combined state: the Run entry must exist AND Task Manager
+    /// must not have flagged us as user-disabled (StartupApproved blob, first
+    /// byte == 0x02 means "disabled by user").
+    /// </summary>
     public bool IsEnabled()
     {
-        ProcessStartInfo psi = new("schtasks.exe", $"/Query /TN \"{TaskName}\"")
-        {
-            CreateNoWindow = true,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-        };
         try
         {
-            using Process p = Process.Start(psi)!;
-            p.WaitForExit(5000);
-            return p.ExitCode == 0;
+            using RegistryKey? run = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: false);
+            if (run is null) return false;
+            object? value = run.GetValue(RunValueName);
+            if (value is null) return false;
+
+            using RegistryKey? approved = Registry.CurrentUser.OpenSubKey(StartupApprovedRunPath, writable: false);
+            if (approved?.GetValue(RunValueName) is byte[] blob && blob.Length > 0)
+            {
+                bool disabledByUser = (blob[0] & 0x01) == 0x00; // 0x02 disabled, 0x03/0x06 enabled
+                return !disabledByUser;
+            }
+            return true;
         }
         catch
         {
@@ -38,125 +62,87 @@ public sealed class AutoStartService
 
     public (bool Ok, string? Error) Enable(string exePath, int delaySeconds = DefaultDelaySeconds)
     {
-        if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
+        if (string.IsNullOrWhiteSpace(exePath) || !System.IO.File.Exists(exePath))
         {
             return (false, "Tideline executable path not found.");
         }
-
-        // Delete any prior version so re-enabling picks up the current exe path.
-        TryDelete();
-
-        string xml = BuildTaskXml(exePath, delaySeconds);
-        string xmlPath = Path.Combine(Path.GetTempPath(), $"tideline-autostart-{Guid.NewGuid():N}.xml");
-        // schtasks /XML expects UTF-16 LE with BOM. The prolog declares
-        // UTF-16 to match; using UTF-8 here trips Windows with
-        // "incorrect document syntax".
-        File.WriteAllText(xmlPath, xml, Encoding.Unicode);
-
         try
         {
-            ProcessStartInfo psi = new("schtasks.exe", $"/Create /TN \"{TaskName}\" /XML \"{xmlPath}\" /F")
+            using RegistryKey run = Registry.CurrentUser.CreateSubKey(RunKeyPath, writable: true)!;
+            string command = $"\"{exePath}\" {StartupArg}";
+            run.SetValue(RunValueName, command, RegistryValueKind.String);
+
+            // Clear any StartupApproved flag so Task Manager shows us as enabled.
+            try
+            {
+                using RegistryKey? approved = Registry.CurrentUser.OpenSubKey(StartupApprovedRunPath, writable: true);
+                if (approved is not null)
+                {
+                    // 12-byte blob: first DWORD = 0x00000002 (enabled, no-disable bits set),
+                    // remaining 8 bytes = last-disable FILETIME (zeroed on enable).
+                    byte[] enabled = new byte[12];
+                    enabled[0] = 0x02; enabled[1] = 0x00; enabled[2] = 0x00; enabled[3] = 0x00;
+                    approved.SetValue(RunValueName, enabled, RegistryValueKind.Binary);
+                }
+            }
+            catch
+            {
+                // best-effort; missing approval blob means Task Manager will treat as enabled by default
+            }
+
+            // Sweep the legacy schtasks task if a prior install created it.
+            TryDeleteLegacyTask();
+            _ = delaySeconds; // current default reads from StartupArgsParser; reserved for future per-user override
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
+    }
+
+    public bool Disable()
+    {
+        bool ok = true;
+        try
+        {
+            using RegistryKey? run = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: true);
+            run?.DeleteValue(RunValueName, throwOnMissingValue: false);
+        }
+        catch
+        {
+            ok = false;
+        }
+        try
+        {
+            using RegistryKey? approved = Registry.CurrentUser.OpenSubKey(StartupApprovedRunPath, writable: true);
+            approved?.DeleteValue(RunValueName, throwOnMissingValue: false);
+        }
+        catch
+        {
+            // ignored
+        }
+        TryDeleteLegacyTask();
+        return ok;
+    }
+
+    private static void TryDeleteLegacyTask()
+    {
+        try
+        {
+            ProcessStartInfo psi = new("schtasks.exe", $"/Delete /TN \"{LegacyTaskName}\" /F")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
             };
-            using Process p = Process.Start(psi)!;
-            string stderr = p.StandardError.ReadToEnd();
-            p.WaitForExit(10000);
-            if (p.ExitCode == 0) return (true, null);
-            return (false, string.IsNullOrWhiteSpace(stderr) ? $"schtasks exited {p.ExitCode}" : stderr.Trim());
-        }
-        catch (Exception ex)
-        {
-            return (false, ex.Message);
-        }
-        finally
-        {
-            try { File.Delete(xmlPath); } catch { }
-        }
-    }
-
-    public bool Disable() => TryDelete();
-
-    private bool TryDelete()
-    {
-        ProcessStartInfo psi = new("schtasks.exe", $"/Delete /TN \"{TaskName}\" /F")
-        {
-            CreateNoWindow = true,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-        };
-        try
-        {
-            using Process p = Process.Start(psi)!;
-            p.WaitForExit(5000);
-            return p.ExitCode == 0;
+            using Process? p = Process.Start(psi);
+            p?.WaitForExit(5000);
         }
         catch
         {
-            return false;
-        }
-    }
-
-    private static string BuildTaskXml(string exePath, int delaySeconds)
-    {
-        string user = Environment.UserDomainName + "\\" + Environment.UserName;
-        string delayIso = delaySeconds > 0 ? $"PT{delaySeconds}S" : "PT0S";
-        string nowIso = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
-        string xml = $@"<?xml version=""1.0"" encoding=""UTF-16""?>
-<Task version=""1.4"" xmlns=""http://schemas.microsoft.com/windows/2004/02/mit/task"">
-  <RegistrationInfo>
-    <Date>{nowIso}</Date>
-    <Author>Tideline</Author>
-    <Description>Launch Tideline on user logon with a short delay so it does not fight other startup programs for boot resources.</Description>
-  </RegistrationInfo>
-  <Triggers>
-    <LogonTrigger>
-      <Enabled>true</Enabled>
-      <UserId>{System.Security.Principal.WindowsIdentity.GetCurrent().User}</UserId>
-      <Delay>{delayIso}</Delay>
-    </LogonTrigger>
-  </Triggers>
-  <Principals>
-    <Principal id=""Author"">
-      <UserId>{System.Security.Principal.WindowsIdentity.GetCurrent().User}</UserId>
-      <LogonType>InteractiveToken</LogonType>
-      <RunLevel>LeastPrivilege</RunLevel>
-    </Principal>
-  </Principals>
-  <Settings>
-    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
-    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
-    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
-    <AllowHardTerminate>true</AllowHardTerminate>
-    <StartWhenAvailable>true</StartWhenAvailable>
-    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
-    <AllowStartOnDemand>true</AllowStartOnDemand>
-    <Enabled>true</Enabled>
-    <Hidden>false</Hidden>
-    <RunOnlyIfIdle>false</RunOnlyIfIdle>
-    <WakeToRun>false</WakeToRun>
-    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
-    <Priority>7</Priority>
-  </Settings>
-  <Actions Context=""Author"">
-    <Exec>
-      <Command>{System.Security.SecurityElement.Escape(exePath)}</Command>
-    </Exec>
-  </Actions>
-</Task>";
-        return xml;
-    }
-
-    public string ExePath
-    {
-        get
-        {
-            string? path = Environment.ProcessPath;
-            return string.IsNullOrEmpty(path) ? string.Empty : path;
+            // task may not exist; ignore
         }
     }
 }

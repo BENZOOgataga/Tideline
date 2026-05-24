@@ -69,7 +69,7 @@
                                   OffContent="Off"
                                   OnContent="On"
                                   Toggled="AutoStartToggle_Toggled" />
-                    <TextBlock Text="Uses Task Scheduler with an 8-second delay so the app does not compete for boot resources."
+                    <TextBlock Text="Registers Tideline in Windows startup so it appears in Task Manager. The app self-delays 8 seconds on logon so it does not compete with other startup programs for boot resources."
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Opacity="0.6"
                                TextWrapping="Wrap" />

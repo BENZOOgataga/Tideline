@@ -63,7 +63,13 @@ public partial class App : Application
 
         Updates = new UpdateService(UiDispatcher);
 
-        ShowMainWindow();
+        // Auto-start launches stay in the tray; the user can click the
+        // icon when they want the window. Normal launches show the
+        // briefing immediately.
+        if (!Program.LaunchedAtStartup)
+        {
+            ShowMainWindow();
+        }
 
         // Fire the once-per-session update check after the window is up.
         // Silently no-ops in dev builds (no Velopack install metadata).
