@@ -113,6 +113,8 @@ jobs:
             releases/*.nupkg
             releases/*-Setup.exe
             releases/RELEASES
+            releases/releases.*.json
+            releases/assets.win.json
             Tideline.streamDeckPlugin
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

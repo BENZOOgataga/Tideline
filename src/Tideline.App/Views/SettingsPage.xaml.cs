@@ -23,6 +23,12 @@ public sealed partial class SettingsPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         _host = e.Parameter as AppHost;
+
+        if (App.Current?.Updates is { } updates)
+        {
+            updates.CheckCompleted -= OnUpdateCheckCompleted;
+            updates.CheckCompleted += OnUpdateCheckCompleted;
+        }
         if (_host is not null)
         {
             DbPathText.Text = _host.Database.DatabasePath;
@@ -130,11 +136,11 @@ public sealed partial class SettingsPage : Page
     {
         UpdateStatusText.Text = "Checking...";
         // Manual user request: bypass the once-per-session guard.
+        // CheckCompleted will fire PopulateAbout when the async work finishes.
         App.Current?.Updates?.RecheckFireAndForget();
-        DispatcherQueue.TryEnqueue(
-            Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
-            PopulateAbout);
     }
+
+    private void OnUpdateCheckCompleted() => PopulateAbout();
 
     private void OpenReleases_Click(object sender, RoutedEventArgs e)
     {

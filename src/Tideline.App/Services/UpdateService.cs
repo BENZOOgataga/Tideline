@@ -25,6 +25,9 @@ public sealed class UpdateService
     /// <summary>Raised on the UI dispatcher when an update has been downloaded and is ready to apply.</summary>
     public event Action? UpdateReady;
 
+    /// <summary>Raised on the UI dispatcher when a check finishes, regardless of whether an update was found.</summary>
+    public event Action? CheckCompleted;
+
     private readonly UpdateManager? _mgr;
     private readonly DispatcherQueue _uiDispatcher;
     private UpdateInfo? _pending;
@@ -98,6 +101,7 @@ public sealed class UpdateService
         {
             IsChecking = false;
             IsDownloading = false;
+            _uiDispatcher.TryEnqueue(() => CheckCompleted?.Invoke());
         }
     }
 
